@@ -2,6 +2,7 @@ package io.github.sonic;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
@@ -72,5 +73,25 @@ public class Character {
         // size into world units (1 unit == 16 pixels)
         setWidth(1 / 16f * regions[0].getRegionWidth());
         setHeight(1 / 16f * regions[0].getRegionHeight());
+    }
+
+    public void render(float deltaTime, Batch batch) {
+        // based on the koala state, get the animation frame
+        TextureRegion frame = switch (state) {
+            case Standing -> stand.getKeyFrame(stateTime);
+            case Walking -> walk.getKeyFrame(stateTime);
+            case Jumping -> jump.getKeyFrame(stateTime);
+        };
+
+        // draw the koala, depending on the current velocity
+        // on the x-axis, draw the koala facing either right
+        // or left
+        batch.begin();
+        if (facesRight) {
+            batch.draw(frame, position.x, position.y, Character.WIDTH, Character.HEIGHT);
+        } else {
+            batch.draw(frame, position.x + Character.WIDTH, position.y, -Character.WIDTH, Character.HEIGHT);
+        }
+        batch.end();
     }
 }

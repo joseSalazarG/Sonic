@@ -55,13 +55,12 @@ public class Main extends InputAdapter implements ApplicationListener {
         // load the map, set the unit scale to 1/16 (1 unit == 16 pixels)
         map = new TmxMapLoader().load("level1.tmx");
         renderer = new OrthogonalTiledMapRenderer(map, 1 / 16f);
-
         // create an orthographic camera, shows us 30x20 units of the world
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 30, 20);
         camera.update();
 
-        koala.position.set(20, 20);
+        koala.position.set(0, 20);
 
         debugRenderer = new ShapeRenderer();
     }
@@ -87,7 +86,7 @@ public class Main extends InputAdapter implements ApplicationListener {
         renderer.render();
 
         // render the koala
-        renderKoala(deltaTime);
+        koala.render(deltaTime, renderer.getBatch());
 
         // render debug rectangles
         if (debug) renderDebug();
@@ -225,27 +224,6 @@ public class Main extends InputAdapter implements ApplicationListener {
                 }
             }
         }
-    }
-
-    private void renderKoala (float deltaTime) {
-        // based on the koala state, get the animation frame
-        TextureRegion frame = switch (koala.state) {
-            case Standing -> koala.stand.getKeyFrame(koala.stateTime);
-            case Walking -> koala.walk.getKeyFrame(koala.stateTime);
-            case Jumping -> koala.jump.getKeyFrame(koala.stateTime);
-        };
-
-        // draw the koala, depending on the current velocity
-        // on the x-axis, draw the koala facing either right
-        // or left
-        Batch batch = renderer.getBatch();
-        batch.begin();
-        if (koala.facesRight) {
-            batch.draw(frame, koala.position.x, koala.position.y, Character.WIDTH, Character.HEIGHT);
-        } else {
-            batch.draw(frame, koala.position.x + Character.WIDTH, koala.position.y, -Character.WIDTH, Character.HEIGHT);
-        }
-        batch.end();
     }
 
     private void renderDebug () {
