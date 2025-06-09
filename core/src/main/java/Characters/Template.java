@@ -29,6 +29,7 @@ public abstract class Template {
     State state = State.Walking;
     public float stateTime = 0;
     public boolean facesRight = true;
+    // todo: recordar como es que se usa el @Getter de lombok
     @Getter
     boolean grounded = false;
 

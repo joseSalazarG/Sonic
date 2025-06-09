@@ -10,8 +10,8 @@ public class Sonic extends Template {
     public Sonic() {
         setWidth(0.5f);
         setHeight(0.5f);
-        MAX_VELOCITY = 10f;
-        JUMP_VELOCITY = 40f;
+        MAX_VELOCITY = 25f;
+        JUMP_VELOCITY = 50f;
         DAMPING = 0.87f;
         // Initialize animations here if needed
     }

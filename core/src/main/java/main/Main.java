@@ -31,23 +31,23 @@ public class Main extends InputAdapter implements ApplicationListener {
     private TiledMap map;
     private OrthogonalTiledMapRenderer renderer;
     private OrthographicCamera camera;
-    private Template koala;
-    private Pool<Rectangle> rectPool = new Pool<Rectangle>() {
+    private Template sonic;
+    private final Pool<Rectangle> rectPool = new Pool<Rectangle>() {
         @Override
         protected Rectangle newObject () {
             return new Rectangle();
         }
     };
-    private Array<Rectangle> tiles = new Array<Rectangle>();
+    private final Array<Rectangle> tiles = new Array<Rectangle>();
     private static final float GRAVITY = -2.5f;
     private boolean debug = false;
     private ShapeRenderer debugRenderer;
 
     @Override
     public void create () {
-        // create the Koala we want to move around the world
-        koala = new Sonic();
-        koala.create();
+        // create the sonic we want to move around the world
+        sonic = new Sonic();
+        sonic.create();
         // load the map, set the unit scale to 1/16 (1 unit == 16 pixels)
         map = new TmxMapLoader().load("level1.tmx");
         renderer = new OrthogonalTiledMapRenderer(map, 1 / 16f);
@@ -56,7 +56,7 @@ public class Main extends InputAdapter implements ApplicationListener {
         camera.setToOrtho(false, 30, 20);
         camera.update();
 
-        koala.position.set(0, 20);
+        sonic.position.set(0, 20);
 
         debugRenderer = new ShapeRenderer();
     }
@@ -69,11 +69,11 @@ public class Main extends InputAdapter implements ApplicationListener {
         // get the delta time
         float deltaTime = Gdx.graphics.getDeltaTime();
 
-        // update the koala (process input, collision detection, position update)
-        updateKoala(deltaTime);
+        // update the sonic (process input, collision detection, position update)
+        updateCharacter(sonic, deltaTime);
 
-        // let the camera follow the koala, x-axis only
-        camera.position.x = koala.position.x;
+        // let the camera follow the sonic, x-axis only
+        camera.position.x = sonic.position.x;
         camera.update();
 
         // set the TiledMapRenderer view based on what the
@@ -81,114 +81,114 @@ public class Main extends InputAdapter implements ApplicationListener {
         renderer.setView(camera);
         renderer.render();
 
-        // render the koala
-        koala.render(deltaTime, renderer.getBatch());
+        // render the sonic
+        sonic.render(deltaTime, renderer.getBatch());
 
         // render debug rectangles
         if (debug) renderDebug();
     }
 
-    private void updateKoala (float deltaTime) {
+    private void updateCharacter(Template player, float deltaTime) {
         if (deltaTime == 0) return;
 
         if (deltaTime > 0.1f)
             deltaTime = 0.1f;
 
-        koala.stateTime += deltaTime;
+        player.stateTime += deltaTime;
 
         // check input and apply to velocity & state
-        if ((Gdx.input.isKeyPressed(Keys.SPACE) || isTouched(0.5f, 1)) && koala.isGrounded()) {
-            koala.jump();
+        if ((Gdx.input.isKeyPressed(Keys.SPACE) || isTouched(0.5f, 1)) && player.isGrounded()) {
+            player.jump();
         }
 
         if (Gdx.input.isKeyPressed(Keys.LEFT) || Gdx.input.isKeyPressed(Keys.A) || isTouched(0, 0.25f)) {
-            koala.moveLeft();
+            player.moveLeft();
         }
 
         if (Gdx.input.isKeyPressed(Keys.RIGHT) || Gdx.input.isKeyPressed(Keys.D) || isTouched(0.25f, 0.5f)) {
-            koala.moveRight();
+            player.moveRight();
         }
 
         if (Gdx.input.isKeyJustPressed(Keys.B))
             debug = !debug;
 
         // apply gravity if we are falling
-        koala.velocity.add(0, GRAVITY);
+        player.velocity.add(0, GRAVITY);
 
         // clamp the velocity to the maximum, x-axis only
-        koala.velocity.x = MathUtils.clamp(koala.velocity.x,
-                -koala.getMaxVelocity(), koala.getMaxVelocity());
+        player.velocity.x = MathUtils.clamp(player.velocity.x,
+                -player.getMaxVelocity(), player.getMaxVelocity());
 
         // If the velocity is < 1, set it to 0 and set state to Standing
-        if (Math.abs(koala.velocity.x) < 1) {
-            koala.stand();
+        if (Math.abs(player.velocity.x) < 1) {
+            player.stand();
         }
 
         // multiply by delta time so we know how far we go
         // in this frame
-        koala.velocity.scl(deltaTime);
+        player.velocity.scl(deltaTime);
 
         // perform collision detection & response, on each axis, separately
-        // if the koala is moving right, check the tiles to the right of it's
+        // if the sonic is moving right, check the tiles to the right of it's
         // right bounding box edge, otherwise check the ones to the left
-        Rectangle koalaRect = rectPool.obtain();
-        koalaRect.set(koala.position.x, koala.position.y, koala.getWidth(), koala.getHeight());
+        Rectangle playerRect = rectPool.obtain();
+        playerRect.set(player.position.x, player.position.y, player.getWidth(), player.getHeight());
         int startX, startY, endX, endY;
-        if (koala.velocity.x > 0) {
-            startX = endX = (int)(koala.position.x + koala.getWidth() + koala.velocity.x);
+        if (player.velocity.x > 0) {
+            startX = endX = (int)(player.position.x + player.getWidth() + player.velocity.x);
         } else {
-            startX = endX = (int)(koala.position.x + koala.velocity.x);
+            startX = endX = (int)(player.position.x + player.velocity.x);
         }
-        startY = (int)(koala.position.y);
-        endY = (int)(koala.position.y + koala.getHeight());
+        startY = (int)(player.position.y);
+        endY = (int)(player.position.y + player.getHeight());
         getTiles(startX, startY, endX, endY, tiles);
-        koalaRect.x += koala.velocity.x;
+        playerRect.x += player.velocity.x;
         for (Rectangle tile : tiles) {
-            if (koalaRect.overlaps(tile)) {
-                koala.velocity.x = 0;
+            if (playerRect.overlaps(tile)) {
+                player.velocity.x = 0;
                 break;
             }
         }
-        koalaRect.x = koala.position.x;
+        playerRect.x = player.position.x;
 
-        // if the koala is moving upwards, check the tiles to the top of its
+        // if the sonic is moving upwards, check the tiles to the top of its
         // top bounding box edge, otherwise check the ones to the bottom
-        if (koala.velocity.y > 0) {
-            startY = endY = (int)(koala.position.y + koala.getHeight() + koala.velocity.y);
+        if (player.velocity.y > 0) {
+            startY = endY = (int)(player.position.y + player.getHeight() + player.velocity.y);
         } else {
-            startY = endY = (int)(koala.position.y + koala.velocity.y);
+            startY = endY = (int)(player.position.y + player.velocity.y);
         }
-        startX = (int)(koala.position.x);
-        endX = (int)(koala.position.x + koala.getWidth());
+        startX = (int)(player.position.x);
+        endX = (int)(player.position.x + player.getWidth());
         getTiles(startX, startY, endX, endY, tiles);
-        koalaRect.y += koala.velocity.y;
+        playerRect.y += player.velocity.y;
         for (Rectangle tile : tiles) {
-            if (koalaRect.overlaps(tile)) {
-                // we actually reset the koala y-position here
+            if (playerRect.overlaps(tile)) {
+                // we actually reset the sonic y-position here
                 // so it is just below/above the tile we collided with
                 // this removes bouncing :)
-                if (koala.velocity.y > 0) {
-                    koala.position.y = tile.y - koala.getHeight();
+                if (player.velocity.y > 0) {
+                    player.position.y = tile.y - player.getHeight();
                     // we hit a block jumping upwards, let's destroy it!
                     TiledMapTileLayer layer = (TiledMapTileLayer)map.getLayers().get("walls");
                     layer.setCell((int)tile.x, (int)tile.y, null);
                 } else {
-                    koala.resetJump(tile.y, tile.height);
+                    player.resetJump(tile.y, tile.height);
                 }
-                koala.velocity.y = 0;
+                player.velocity.y = 0;
                 break;
             }
         }
-        rectPool.free(koalaRect);
+        rectPool.free(playerRect);
 
         // unscale the velocity by the inverse delta time and set
         // the latest position
-        koala.position.add(koala.velocity);
-        koala.velocity.scl(1 / deltaTime);
+        player.position.add(player.velocity);
+        player.velocity.scl(1 / deltaTime);
 
         // Apply damping to the velocity on the x-axis so we don't
         // walk infinitely once a key was pressed
-        koala.velocity.x *= koala.getDamping();
+        player.velocity.x *= player.getDamping();
     }
 
     private boolean isTouched (float startX, float endX) {
@@ -224,7 +224,7 @@ public class Main extends InputAdapter implements ApplicationListener {
         debugRenderer.begin(ShapeType.Line);
 
         debugRenderer.setColor(Color.RED);
-        debugRenderer.rect(koala.position.x, koala.position.y, koala.getWidth(), koala.getHeight());
+        debugRenderer.rect(sonic.position.x, sonic.position.y, sonic.getWidth(), sonic.getHeight());
 
         debugRenderer.setColor(Color.YELLOW);
         TiledMapTileLayer layer = (TiledMapTileLayer)map.getLayers().get("walls");
