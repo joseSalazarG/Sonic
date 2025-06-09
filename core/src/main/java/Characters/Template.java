@@ -1,12 +1,13 @@
-package io.github.sonic;
+package Characters;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import lombok.Getter;
 
-public class Character {
+public abstract class Template {
 
     /** The player character, has state and state time, */
     static float WIDTH;
@@ -14,7 +15,7 @@ public class Character {
     static float MAX_VELOCITY = 10f;
     static float JUMP_VELOCITY = 40f;
     static float DAMPING = 0.87f;
-    private Texture texture;
+    protected Texture texture;
     public Animation<TextureRegion> stand;
     public Animation<TextureRegion> walk;
     public Animation<TextureRegion> jump;
@@ -23,44 +24,61 @@ public class Character {
         Standing, Walking, Jumping
     }
 
-    final Vector2 position = new Vector2();
-    final Vector2 velocity = new Vector2();
+    public final Vector2 position = new Vector2();
+    public final Vector2 velocity = new Vector2();
     State state = State.Walking;
-    float stateTime = 0;
-    boolean facesRight = true;
+    public float stateTime = 0;
+    public boolean facesRight = true;
+    @Getter
     boolean grounded = false;
 
 
     public void setWidth(float width) {
-        Character.WIDTH = width;
+        Template.WIDTH = width;
     }
     public void setHeight(float height) {
-        Character.HEIGHT = height;
+        Template.HEIGHT = height;
     }
+    public float getWidth() {
+        return Template.WIDTH;
+    }
+    public float getHeight() {
+        return Template.HEIGHT;
+    }
+    public float getMaxVelocity() {return MAX_VELOCITY;}
+    public float getDamping() {return DAMPING;}
 
     public void jump() {
-        velocity.y += Character.JUMP_VELOCITY;
-        state = Character.State.Jumping;
+        velocity.y += Template.JUMP_VELOCITY;
+        state = Template.State.Jumping;
         grounded = false;
     }
 
+    public void stand() {
+        velocity.x = 0;
+        if (grounded) state = State.Standing;
+        stateTime = 0; // reset the state time to avoid flickering
+    }
+
+    public void resetJump(float y, float height) {
+        position.y = y + height;
+        // if we hit the ground, mark us as grounded so we can jump
+        grounded = true;
+    }
+
     public void moveLeft() {
-        velocity.x = -Character.MAX_VELOCITY;
+        velocity.x = -Template.MAX_VELOCITY;
         if (grounded) state = State.Walking;
         facesRight = false;
     }
 
     public void moveRight() {
-        velocity.x = Character.MAX_VELOCITY;
+        velocity.x = Template.MAX_VELOCITY;
         if (grounded) state = State.Walking;
         facesRight = true;
     }
 
     public void create() {
-        loadAnimations();
-    }
-
-    private void loadAnimations() {
         // load the koala frames, split them, and assign them to Animations
         texture = new Texture("koalio.png");
         TextureRegion[] regions = TextureRegion.split(texture, 18, 26)[0];
@@ -88,9 +106,9 @@ public class Character {
         // or left
         batch.begin();
         if (facesRight) {
-            batch.draw(frame, position.x, position.y, Character.WIDTH, Character.HEIGHT);
+            batch.draw(frame, position.x, position.y, Template.WIDTH, Template.HEIGHT);
         } else {
-            batch.draw(frame, position.x + Character.WIDTH, position.y, -Character.WIDTH, Character.HEIGHT);
+            batch.draw(frame, position.x + Template.WIDTH, position.y, -Template.WIDTH, Template.HEIGHT);
         }
         batch.end();
     }
