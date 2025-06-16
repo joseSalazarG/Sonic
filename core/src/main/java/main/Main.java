@@ -2,6 +2,7 @@ package main;
 
 import Characters.Sonic;
 import Characters.Template;
+import Multiplayer.Mensaje;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
@@ -18,8 +19,14 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.esotericsoftware.kryonet.Client;
+import com.esotericsoftware.kryonet.Listener;
+import com.esotericsoftware.kryonet.Server;
+
+import java.io.IOException;
 
 /** Super Mario Brothers-like very basic platformer, using a tile map built using <a href="https://www.mapeditor.org/">Tiled</a> and a
  * tileset and sprites by <a href="http://www.vickiwenderlich.com/">Vicky Wenderlich</a></p>
@@ -42,10 +49,43 @@ public class Main extends InputAdapter implements ApplicationListener {
     private static final float GRAVITY = -2.5f;
     private boolean debug = false;
     private ShapeRenderer debugRenderer;
+    private Server server = null;
+    private Client client = null;
+
+    // Constructor para el cliente
+    public Main(Client client) {
+        this.client = client;
+        registrarClasesKryo();
+        // test
+        System.out.println("Cliente iniciado, enviando mensaje al servidor...");
+        Mensaje mensaje = new Mensaje("Hola, servidor");
+        client.sendTCP(mensaje);
+    }
+    // Constructor para el servidor
+    public Main(Server server) {
+        this.server = server;
+        registrarClasesKryo();
+    }
+
+    // se podria pasar a generico
+    private void registrarClasesKryo() {
+        if (server != null) {
+            server.getKryo().register(Sonic.class);
+            server.getKryo().register(Template.class);
+            server.getKryo().register(Mensaje.class);
+            // Register other classes as needed
+        } else if (client != null) {
+            client.getKryo().register(Sonic.class);
+            client.getKryo().register(Template.class);
+            client.getKryo().register(Mensaje.class);
+            // Register other classes as needed
+        }
+    }
 
     @Override
-    public void create () {
+    public void create() {
         // create the sonic we want to move around the world
+
         sonic = new Sonic();
         sonic.create();
         // load the map, set the unit scale to 1/16 (1 unit == 16 pixels)

@@ -2,6 +2,7 @@
 buildscript {
   repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
     google()
   }
 }
@@ -61,6 +62,7 @@ dependencies {
   coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
   implementation "com.badlogicgames.gdx-controllers:gdx-controllers-android:$gdxControllersVersion"
   implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
+  implementation 'com.github.crykn:kryonet:2.22.9'
   implementation project(':core')
 
   natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-arm64-v8a"

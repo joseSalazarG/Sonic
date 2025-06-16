@@ -1,57 +1,18 @@
 package io.github.sonic.lwjgl3;
 
-import Multiplayer.ClientListener;
-import Multiplayer.ServerListener;
-import Multiplayer.Mensaje;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.esotericsoftware.kryonet.Server;
 import main.Main;
-import com.esotericsoftware.kryonet.Client;
-import java.io.IOException;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
-
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
-
-        try {
-            createApplication(iniciarCliente());
-        } catch (IOException e) {
-            // si no se conecta a un servidor entonces lo crea
-            createApplication(iniciarServer());
-        }
+        createApplication();
     }
 
-    private static Client iniciarCliente() throws IOException {
-        Client client = new Client();
-        client.start();
-        client.connect(5000, "localhost", 54555, 54777);
-        client.addListener(new ClientListener());
-        return client;
-    }
-
-    private static Server iniciarServer() {
-        Server server = new Server();
-        server.start();
-        try {
-            server.bind(54555, 54777);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        server.addListener(new ServerListener());
-        return server;
-    }
-
-
-
-    private static Lwjgl3Application createApplication(Client client) {
-        return new Lwjgl3Application(new Main(client), getDefaultConfiguration());
-    }
-
-    private static Lwjgl3Application createApplication(Server server) {
-        return new Lwjgl3Application(new Main(server), getDefaultConfiguration());
+    private static Lwjgl3Application createApplication() {
+        return new Lwjgl3Application(new Main(), getDefaultConfiguration());
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
