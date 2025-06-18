@@ -24,7 +24,6 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
-
 import java.io.IOException;
 
 /** Super Mario Brothers-like very basic platformer, using a tile map built using <a href="https://www.mapeditor.org/">Tiled</a> and a
@@ -91,32 +90,20 @@ public class Main extends InputAdapter implements ApplicationListener {
         if (client != null) {
             personaje = new Tails();
             personaje.create();
-            // load the map, set the unit scale to 1/16 (1 unit == 16 pixels)
-            //map = new TmxMapLoader().load("level1.tmx");
-            map = new TmxMapLoader().load("Niveles/level2.tmx");
-            renderer = new OrthogonalTiledMapRenderer(map, 1 / 16f);
-            // create an orthographic camera, shows us 30x20 units of the world
-            pantalla = new OrthographicCamera();
-            pantalla.setToOrtho(false, 30, 20);
-            pantalla.update();
-
-            personaje.position.set(0, 20);
-
         } else {
             // Si no hay cliente, se asume que es un servidor
-            personaje = new Knuckles();
+            personaje = new Sonic();
             personaje.create();
-            // load the map, set the unit scale to 1/16 (1 unit == 16 pixels)
-            map = new TmxMapLoader().load("Niveles/level2.tmx");
-            renderer = new OrthogonalTiledMapRenderer(map, 1 / 16f);
-            // create an orthographic camera, shows us 30x20 units of the world
-            pantalla = new OrthographicCamera();
-            pantalla.setToOrtho(false, 30, 20);
-            pantalla.update();
-
-            personaje.position.set(0, 20);
-
         }
+        // load the map, set the unit scale to 1/16 (1 unit == 16 pixels)
+        map = new TmxMapLoader().load("Niveles/level3.tmx");
+        renderer = new OrthogonalTiledMapRenderer(map, 1 / 16f);
+        // create an orthographic camera, shows us 30x20 units of the world
+        pantalla = new OrthographicCamera();
+        pantalla.setToOrtho(false, 30, 20);
+        pantalla.update();
+
+        personaje.position.set(0, 20);
         debugRenderer = new ShapeRenderer();
     }
 
