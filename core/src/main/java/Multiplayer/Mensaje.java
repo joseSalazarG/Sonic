@@ -6,4 +6,8 @@ public class Mensaje {
     public Mensaje(String mensaje) {
         this.mensaje = mensaje;
     }
+
+    public Mensaje() {
+        // Constructor por defecto necesario para KryoNet
+    }
 }

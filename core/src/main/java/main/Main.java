@@ -1,7 +1,6 @@
 package main;
 
-import Characters.Sonic;
-import Characters.Template;
+import Characters.*;
 import Multiplayer.Mensaje;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -37,20 +36,20 @@ public class Main extends InputAdapter implements ApplicationListener {
 
     private TiledMap map;
     private OrthogonalTiledMapRenderer renderer;
-    private OrthographicCamera camera;
-    private Template sonic;
-    private final Pool<Rectangle> rectPool = new Pool<Rectangle>() {
-        @Override
-        protected Rectangle newObject () {
-            return new Rectangle();
-        }
-    };
+    private OrthographicCamera pantalla;
+    private Template personaje;
     private final Array<Rectangle> tiles = new Array<Rectangle>();
     private static final float GRAVITY = -2.5f;
     private boolean debug = false;
     private ShapeRenderer debugRenderer;
     private Server server = null;
     private Client client = null;
+    private final Pool<Rectangle> rectPool = new Pool<Rectangle>() {
+        @Override
+        protected Rectangle newObject () {
+            return new Rectangle();
+        }
+    };
 
     // Constructor para el cliente
     public Main(Client client) {
@@ -71,11 +70,15 @@ public class Main extends InputAdapter implements ApplicationListener {
     private void registrarClasesKryo() {
         if (server != null) {
             server.getKryo().register(Sonic.class);
+            server.getKryo().register(Koala.class);
+            server.getKryo().register(Tails.class);
             server.getKryo().register(Template.class);
             server.getKryo().register(Mensaje.class);
             // Register other classes as needed
         } else if (client != null) {
             client.getKryo().register(Sonic.class);
+            client.getKryo().register(Koala.class);
+            client.getKryo().register(Tails.class);
             client.getKryo().register(Template.class);
             client.getKryo().register(Mensaje.class);
             // Register other classes as needed
@@ -85,49 +88,60 @@ public class Main extends InputAdapter implements ApplicationListener {
     @Override
     public void create() {
         // create the sonic we want to move around the world
+        if (client != null) {
+            personaje = new Tails();
+            personaje.create();
+            // load the map, set the unit scale to 1/16 (1 unit == 16 pixels)
+            //map = new TmxMapLoader().load("level1.tmx");
+            map = new TmxMapLoader().load("Niveles/level2.tmx");
+            renderer = new OrthogonalTiledMapRenderer(map, 1 / 16f);
+            // create an orthographic camera, shows us 30x20 units of the world
+            pantalla = new OrthographicCamera();
+            pantalla.setToOrtho(false, 30, 20);
+            pantalla.update();
 
-        sonic = new Sonic();
-        sonic.create();
-        // load the map, set the unit scale to 1/16 (1 unit == 16 pixels)
-        map = new TmxMapLoader().load("level1.tmx");
-        renderer = new OrthogonalTiledMapRenderer(map, 1 / 16f);
-        // create an orthographic camera, shows us 30x20 units of the world
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false, 30, 20);
-        camera.update();
+            personaje.position.set(0, 20);
 
-        sonic.position.set(0, 20);
+        } else {
+            // Si no hay cliente, se asume que es un servidor
+            personaje = new Knuckles();
+            personaje.create();
+            // load the map, set the unit scale to 1/16 (1 unit == 16 pixels)
+            map = new TmxMapLoader().load("Niveles/level2.tmx");
+            renderer = new OrthogonalTiledMapRenderer(map, 1 / 16f);
+            // create an orthographic camera, shows us 30x20 units of the world
+            pantalla = new OrthographicCamera();
+            pantalla.setToOrtho(false, 30, 20);
+            pantalla.update();
 
+            personaje.position.set(0, 20);
+
+        }
         debugRenderer = new ShapeRenderer();
     }
 
     @Override
     public void render () {
-        // clear the screen
+        // colorea la pantalla de azul claro
         ScreenUtils.clear(0.7f, 0.7f, 1.0f, 1);
-
         // get the delta time
         float deltaTime = Gdx.graphics.getDeltaTime();
-
         // update the sonic (process input, collision detection, position update)
-        updateCharacter(sonic, deltaTime);
-
+        updateCharacter(personaje, deltaTime);
         // let the camera follow the sonic, x-axis only
-        camera.position.x = sonic.position.x;
-        camera.update();
-
+        pantalla.position.x = personaje.position.x;
+        pantalla.update();
         // set the TiledMapRenderer view based on what the
-        // camera sees, and render the map
-        renderer.setView(camera);
+        // pantalla sees, and render the map
+        renderer.setView(pantalla);
         renderer.render();
-
         // render the sonic
-        sonic.render(deltaTime, renderer.getBatch());
-
+        personaje.render(deltaTime, renderer.getBatch());
         // render debug rectangles
         if (debug) renderDebug();
     }
 
+    // Actualiza al personaje según la entrada del usuario y la fisica del juego
     private void updateCharacter(Template player, float deltaTime) {
         if (deltaTime == 0) return;
 
@@ -135,35 +149,20 @@ public class Main extends InputAdapter implements ApplicationListener {
             deltaTime = 0.1f;
 
         player.stateTime += deltaTime;
-
-        // check input and apply to velocity & state
-        if ((Gdx.input.isKeyPressed(Keys.SPACE) || isTouched(0.5f, 1)) && player.isGrounded()) {
-            player.jump();
-        }
-
-        if (Gdx.input.isKeyPressed(Keys.LEFT) || Gdx.input.isKeyPressed(Keys.A) || isTouched(0, 0.25f)) {
-            player.moveLeft();
-        }
-
-        if (Gdx.input.isKeyPressed(Keys.RIGHT) || Gdx.input.isKeyPressed(Keys.D) || isTouched(0.25f, 0.5f)) {
-            player.moveRight();
-        }
-
-        if (Gdx.input.isKeyJustPressed(Keys.B))
-            debug = !debug;
-
+        // detecta las entradas del usuario
+        if ((Gdx.input.isKeyPressed(Keys.SPACE) || isTouched(0.5f, 1)) && player.isGrounded()) { player.jump();}
+        if (Gdx.input.isKeyPressed(Keys.LEFT) || Gdx.input.isKeyPressed(Keys.A) || isTouched(0, 0.25f)) { player.moveLeft();}
+        if (Gdx.input.isKeyPressed(Keys.RIGHT) || Gdx.input.isKeyPressed(Keys.D) || isTouched(0.25f, 0.5f)) { player.moveRight();}
+        if (Gdx.input.isKeyJustPressed(Keys.B)) debug = !debug;
         // apply gravity if we are falling
         player.velocity.add(0, GRAVITY);
-
         // clamp the velocity to the maximum, x-axis only
         player.velocity.x = MathUtils.clamp(player.velocity.x,
                 -player.getMaxVelocity(), player.getMaxVelocity());
-
         // If the velocity is < 1, set it to 0 and set state to Standing
         if (Math.abs(player.velocity.x) < 1) {
             player.stand();
         }
-
         // multiply by delta time so we know how far we go
         // in this frame
         player.velocity.scl(deltaTime);
@@ -260,11 +259,11 @@ public class Main extends InputAdapter implements ApplicationListener {
     }
 
     private void renderDebug () {
-        debugRenderer.setProjectionMatrix(camera.combined);
+        debugRenderer.setProjectionMatrix(pantalla.combined);
         debugRenderer.begin(ShapeType.Line);
 
         debugRenderer.setColor(Color.RED);
-        debugRenderer.rect(sonic.position.x, sonic.position.y, sonic.getWidth(), sonic.getHeight());
+        debugRenderer.rect(personaje.position.x, personaje.position.y, personaje.getWidth(), personaje.getHeight());
 
         debugRenderer.setColor(Color.YELLOW);
         TiledMapTileLayer layer = (TiledMapTileLayer)map.getLayers().get("walls");
@@ -272,7 +271,7 @@ public class Main extends InputAdapter implements ApplicationListener {
             for (int x = 0; x <= layer.getWidth(); x++) {
                 Cell cell = layer.getCell(x, y);
                 if (cell != null) {
-                    if (camera.frustum.boundsInFrustum(x + 0.5f, y + 0.5f, 0, 1, 1, 0))
+                    if (pantalla.frustum.boundsInFrustum(x + 0.5f, y + 0.5f, 0, 1, 1, 0))
                         debugRenderer.rect(x, y, 1, 1);
                 }
             }

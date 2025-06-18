@@ -21,7 +21,7 @@ public abstract class Template {
     public Animation<TextureRegion> jump;
 
     enum State {
-        Standing, Walking, Jumping
+        Standing, Walking, Jumping, Flying
     }
 
     public final Vector2 position = new Vector2();
@@ -51,7 +51,7 @@ public abstract class Template {
 
     public void jump() {
         velocity.y += Template.JUMP_VELOCITY;
-        state = Template.State.Jumping;
+        state = State.Jumping;
         grounded = false;
     }
 
@@ -81,7 +81,7 @@ public abstract class Template {
 
     public void create() {
         // load the koala frames, split them, and assign them to Animations
-        texture = new Texture("koalio.png");
+        texture = new Texture("Personajes/koalio.png");
         TextureRegion[] regions = TextureRegion.split(texture, 18, 26)[0];
         stand = new Animation<TextureRegion>(0, regions[0]);
         jump = new Animation<TextureRegion>(0, regions[1]);
@@ -100,6 +100,7 @@ public abstract class Template {
             case Standing -> stand.getKeyFrame(stateTime);
             case Walking -> walk.getKeyFrame(stateTime);
             case Jumping -> jump.getKeyFrame(stateTime);
+            case Flying -> null;
         };
 
         // draw the koala, depending on the current velocity
