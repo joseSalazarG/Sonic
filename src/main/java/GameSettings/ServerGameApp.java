@@ -10,7 +10,7 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
 import component.GameFactory;
 import component.Personajes.PlayerComponent;
-import component.SonicLogic;
+import component.GameLogic;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
     private final int altoPantalla = 700;
     private Connection<Bundle> conexion;
     private List<Connection> conexiones = new ArrayList<>();
-    private Entity player;
+    private Player player;
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -53,30 +53,54 @@ public class ServerGameApp extends GameApplication implements Serializable{
 
     public void onServer() {
         // manejo de mensajes
+        
         conexion.addMessageHandlerFX((connection, bundle) -> {
             switch (bundle.getName()) {
+
                 case "Mover a la izquierda":
-                    System.out.println("Jugador movió a la izquierda");
-                    player.getComponent(PlayerComponent.class).moverIzquierda();
+                    System.out.println("Jugador movio a la izquierda");
+                    //player.getComponent(PlayerComponent.class).moverIzquierda();
                     break;
+
                 case "Mover a la derecha":
-                    System.out.println("Jugador movió a la derecha");
-                    player.getComponent(PlayerComponent.class).moverDerecha();
+                    System.out.println("Jugador movio a la derecha");
+                    //player.getComponent(PlayerComponent.class).moverDerecha();
                     break;
+
                 case "Saltar":
-                    System.out.println("Jugador saltó");
-                    player.getComponent(PlayerComponent.class).saltar();
+                    System.out.println("Jugador salto");
+                    //player.getComponent(PlayerComponent.class).saltar();
                     break;
+
                 case "Detente":
                     System.out.println("Jugador se detuvo");
-                    player.getComponent(PlayerComponent.class).detener();
+                    //player.getComponent(PlayerComponent.class).detener();
                     break;
+
                 case "Crear Sonic":
+                    // responderle al cliente que envio el mensaje
+                    GameLogic.enviarMensaje("Crear Sonic", connection);
+                    // para decirle a los demas que un jugador escogio Sonic
                     for (Connection<Bundle> conn : conexiones) {
                         if (conn != connection) {
-                            SonicLogic.enviarMensaje("Color nuevo", connection);
+                            GameLogic.enviarMensaje("Alguien escogio Sonic", connection);
                         }
                     }
+                    break;
+             
+                case "Crear Tails":
+                    
+                    for (Connection<Bundle> conn : conexiones) {
+                        if (conn != connection) {
+
+                        }
+                        //
+                    }
+                    break;
+
+                case "Hola":
+                    System.out.println("sonic se conecto");
+                    break;
             }
         });
         conexiones.add(conexion);

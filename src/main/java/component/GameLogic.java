@@ -6,7 +6,7 @@ import com.almasb.fxgl.net.Connection;
 
 import java.io.Serializable;
 
-public class SonicLogic extends Component implements Serializable {
+public class GameLogic extends Component implements Serializable {
 
     public static void enviarMensaje(String titulo, Connection<Bundle> conexion) {
         Bundle bundle = new Bundle(titulo);

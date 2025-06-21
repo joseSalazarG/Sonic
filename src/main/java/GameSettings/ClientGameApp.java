@@ -10,7 +10,7 @@ import static com.almasb.fxgl.dsl.FXGL.*;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
 
-import component.SonicLogic;
+import component.GameLogic;
 import javafx.scene.input.KeyCode;
 import component.GameFactory;
 
@@ -25,7 +25,7 @@ public class ClientGameApp extends GameApplication {
     protected void initSettings(GameSettings gameSettings) {
         gameSettings.setWidth(anchoPantalla);
         gameSettings.setHeight(altoPantalla);
-        gameSettings.setTitle("Jugador");
+        gameSettings.setTitle("Jugador Sonic");
         gameSettings.addEngineService(MultiplayerService.class);
     }
 
@@ -42,20 +42,41 @@ public class ClientGameApp extends GameApplication {
         Jugar();
     }
 
-    private void Jugar(){
+    private void Jugar() {
         getGameWorld().addEntityFactory(new GameFactory());
+        //
         spawn("fondo");
-        player = null;
         Level level = setLevelFromMap("level.tmx");
-        player = (Player) spawn("sonic", 50, 150);
-        //SonicLogic.enviarMensaje();
+        player = (Player) spawn("tails", 50, 150);
+        GameLogic.enviarMensaje("Crear Tails", conexion);
+        player = (Player) spawn("tails", 50, 150);
+        //GameLogic.enviarMensaje("Crear Sonic", conexion);
     }
 
     private void onClient() {
         // manejo de mensajes
+        /* 
+        getService(MultiplayerService.class).addEntityReplicationReceiver(conexion, getGameWorld());
+        getService(MultiplayerService.class).addInputReplicationSender(conexion, getInput());
+        getService(MultiplayerService.class).addPropertyReplicationReceiver(conexion, getWorldProperties());
+        */
+
         conexion.addMessageHandlerFX((conexion, bundle) -> {
             switch (bundle.getName()) {
-                case "Mano inicial":
+                case "Crear Sonic":
+                    break;
+                
+                case "Crear Tails":
+                    
+                    break;
+
+                case "1":
+                    break;
+
+                case "2":
+                    break;
+
+                case "3":
                     break;
             }
         });
@@ -67,12 +88,12 @@ public class ClientGameApp extends GameApplication {
         getInput().addAction(new UserAction("Mover a la izquierda") {
             @Override
             protected void onAction() {
-                SonicLogic.enviarMensaje("Mover a la izquierda", conexion);
+                GameLogic.enviarMensaje("Mover a la izquierda", conexion);
                 player.moverIzquierda();
             }
             @Override
             protected void onActionEnd() {
-                SonicLogic.enviarMensaje("Detente", conexion);
+                GameLogic.enviarMensaje("Detente", conexion);
                 player.detener();
             }
         }, KeyCode.A, VirtualButton.LEFT);
@@ -80,12 +101,12 @@ public class ClientGameApp extends GameApplication {
         getInput().addAction(new UserAction("Mover a la derecha") {
             @Override
             protected void onAction() {
-                SonicLogic.enviarMensaje("Mover a la derecha", conexion);
+                GameLogic.enviarMensaje("Mover a la derecha", conexion);
                 player.moverDerecha();
             }
             @Override
             protected void onActionEnd() {
-                SonicLogic.enviarMensaje("Detente", conexion);
+                GameLogic.enviarMensaje("Detente", conexion);
                 player.detener();
             }
         }, KeyCode.D, VirtualButton.RIGHT);
@@ -93,7 +114,7 @@ public class ClientGameApp extends GameApplication {
         getInput().addAction(new UserAction("Saltar") {
             @Override
             protected void onActionBegin() {
-                SonicLogic.enviarMensaje("Saltar", conexion);
+                GameLogic.enviarMensaje("Saltar", conexion);
                 player.saltar();
             }
         }, KeyCode.W, VirtualButton.A); // xbox
