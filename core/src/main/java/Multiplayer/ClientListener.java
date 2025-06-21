@@ -18,6 +18,11 @@ public class ClientListener implements Listener {
                 // Aquí puedes procesar el objeto del cliente si es necesario
                 break;
 
+            case "PosicionJugador":
+                PosicionJugador pos = (PosicionJugador) object;
+                // Actualiza la posición del jugador 2 en la pantalla del jugador 1
+                //jugador2.position.set(pos.x, pos.y);
+
             case "KeepAlive":
                 // No es necesario hacer nada, solo se recibe para mantener la conexión
                 break;

@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 public class Knuckles extends Template {
 
     public Knuckles() {
+        super();
         setWidth(0.5f);
         setHeight(0.5f);
         MAX_VELOCITY = 10f;

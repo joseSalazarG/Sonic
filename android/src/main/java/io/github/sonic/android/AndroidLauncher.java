@@ -4,7 +4,6 @@ import android.os.Bundle;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import main.Main;
 import com.esotericsoftware.kryonet.Client;
 
 import java.io.IOException;
@@ -17,7 +16,7 @@ public class AndroidLauncher extends AndroidApplication {
         AndroidApplicationConfiguration configuration = new AndroidApplicationConfiguration();
         configuration.useImmersiveMode = true; // Recommended, but not required.
        // Client client = iniciarCliente();
-       // initialize(new Main(client, configuration));
+       // initialize(new Main_Server(client, configuration));
     }
 
     private static Client iniciarCliente() throws IOException {

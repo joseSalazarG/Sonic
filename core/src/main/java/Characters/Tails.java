@@ -40,18 +40,7 @@ public class Tails extends Template {
         setHeight(1 / 16f * regions[0].getRegionHeight());
     }
 
-    @Override
-    public void jump() {
-        velocity.y += Template.JUMP_VELOCITY;
-        state = Template.State.Jumping;
-        grounded = false;
-        // Add logic for flying if needed
-        if (state == Template.State.Jumping) {
-            // Example: start flying animation
-            // setAnimation(fly);
 
-        }
-    }
 
     @Override
     public void render(float deltaTime, Batch batch) {

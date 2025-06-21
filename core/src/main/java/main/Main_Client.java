@@ -2,6 +2,7 @@ package main;
 
 import Characters.*;
 import Multiplayer.Mensaje;
+import Multiplayer.PosicionJugador;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
@@ -18,20 +19,12 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.esotericsoftware.kryonet.Client;
-import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
-import java.io.IOException;
 
-/** Super Mario Brothers-like very basic platformer, using a tile map built using <a href="https://www.mapeditor.org/">Tiled</a> and a
- * tileset and sprites by <a href="http://www.vickiwenderlich.com/">Vicky Wenderlich</a></p>
- *
- * Shows simple platformer collision detection as well as on-the-fly map modifications through destructible blocks!
- * @author mzechner */
-public class Main extends InputAdapter implements ApplicationListener {
+public class Main_Client extends InputAdapter implements ApplicationListener {
 
     private TiledMap map;
     private OrthogonalTiledMapRenderer renderer;
@@ -41,7 +34,6 @@ public class Main extends InputAdapter implements ApplicationListener {
     private static final float GRAVITY = -2.5f;
     private boolean debug = false;
     private ShapeRenderer debugRenderer;
-    private Server server = null;
     private Client client = null;
     private final Pool<Rectangle> rectPool = new Pool<Rectangle>() {
         @Override
@@ -51,7 +43,7 @@ public class Main extends InputAdapter implements ApplicationListener {
     };
 
     // Constructor para el cliente
-    public Main(Client client) {
+    public Main_Client(Client client) {
         this.client = client;
         registrarClasesKryo();
         // test
@@ -59,42 +51,29 @@ public class Main extends InputAdapter implements ApplicationListener {
         Mensaje mensaje = new Mensaje("Hola, servidor");
         client.sendTCP(mensaje);
     }
-    // Constructor para el servidor
-    public Main(Server server) {
-        this.server = server;
-        registrarClasesKryo();
-    }
 
     // se podria pasar a generico
     private void registrarClasesKryo() {
-        if (server != null) {
-            server.getKryo().register(Sonic.class);
-            server.getKryo().register(Koala.class);
-            server.getKryo().register(Tails.class);
-            server.getKryo().register(Template.class);
-            server.getKryo().register(Mensaje.class);
-            // Register other classes as needed
-        } else if (client != null) {
-            client.getKryo().register(Sonic.class);
-            client.getKryo().register(Koala.class);
-            client.getKryo().register(Tails.class);
-            client.getKryo().register(Template.class);
-            client.getKryo().register(Mensaje.class);
-            // Register other classes as needed
-        }
+        client.getKryo().register(Sonic.class);
+        //client.getKryo().register(Koala.class);
+        client.getKryo().register(Tails.class);
+        client.getKryo().register(Template.class);
+        client.getKryo().register(Mensaje.class);
+        client.getKryo().register(com.badlogic.gdx.graphics.g2d.Animation.class);
+        client.getKryo().register(com.badlogic.gdx.graphics.g2d.TextureRegion[].class);
+        client.getKryo().register(com.badlogic.gdx.graphics.g2d.TextureRegion.class);
+        client.getKryo().register(com.badlogic.gdx.graphics.Texture.class);
+        client.getKryo().register(com.badlogic.gdx.graphics.glutils.FileTextureData.class);
+
+        //client.getKryo().register(PosicionJugador.class);
+        // Register other classes as needed
     }
 
     @Override
     public void create() {
         // create the sonic we want to move around the world
-        if (client != null) {
-            personaje = new Tails();
-            personaje.create();
-        } else {
-            // Si no hay cliente, se asume que es un servidor
-            personaje = new Sonic();
-            personaje.create();
-        }
+        personaje = new Tails();
+        personaje.create();
         // load the map, set the unit scale to 1/16 (1 unit == 16 pixels)
         map = new TmxMapLoader().load("Niveles/level3.tmx");
         renderer = new OrthogonalTiledMapRenderer(map, 1 / 16f);
@@ -107,6 +86,11 @@ public class Main extends InputAdapter implements ApplicationListener {
         debugRenderer = new ShapeRenderer();
     }
 
+    private void escogerPersonaje() {
+        // Escoge el personaje a usar
+        client.sendTCP(new Mensaje("Escoger personaje"));
+    }
+
     @Override
     public void render () {
         // colorea la pantalla de azul claro
@@ -115,6 +99,8 @@ public class Main extends InputAdapter implements ApplicationListener {
         float deltaTime = Gdx.graphics.getDeltaTime();
         // update the sonic (process input, collision detection, position update)
         updateCharacter(personaje, deltaTime);
+        // if we have a server, send the position of the sonic to all clients\
+
         // let the camera follow the sonic, x-axis only
         pantalla.position.x = personaje.position.x;
         pantalla.update();
@@ -137,15 +123,23 @@ public class Main extends InputAdapter implements ApplicationListener {
 
         player.stateTime += deltaTime;
         // detecta las entradas del usuario
-        if ((Gdx.input.isKeyPressed(Keys.SPACE) || isTouched(0.5f, 1)) && player.isGrounded()) { player.jump();}
-        if (Gdx.input.isKeyPressed(Keys.LEFT) || Gdx.input.isKeyPressed(Keys.A) || isTouched(0, 0.25f)) { player.moveLeft();}
-        if (Gdx.input.isKeyPressed(Keys.RIGHT) || Gdx.input.isKeyPressed(Keys.D) || isTouched(0.25f, 0.5f)) { player.moveRight();}
+        if ((Gdx.input.isKeyPressed(Keys.SPACE) || isTouched(0.5f, 1)) && player.isGrounded()) {
+            player.jump();
+            client.sendTCP(player);
+        }
+        if (Gdx.input.isKeyPressed(Keys.LEFT) || Gdx.input.isKeyPressed(Keys.A) || isTouched(0, 0.25f)) {
+            player.moveLeft();
+        }
+        if (Gdx.input.isKeyPressed(Keys.RIGHT) || Gdx.input.isKeyPressed(Keys.D) || isTouched(0.25f, 0.5f)) {
+            player.moveRight();
+        }
+
         if (Gdx.input.isKeyJustPressed(Keys.B)) debug = !debug;
         // apply gravity if we are falling
         player.velocity.add(0, GRAVITY);
         // clamp the velocity to the maximum, x-axis only
         player.velocity.x = MathUtils.clamp(player.velocity.x,
-                -player.getMaxVelocity(), player.getMaxVelocity());
+            -player.getMaxVelocity(), player.getMaxVelocity());
         // If the velocity is < 1, set it to 0 and set state to Standing
         if (Math.abs(player.velocity.x) < 1) {
             player.stand();

@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import lombok.Getter;
+import com.esotericsoftware.kryonet.Connection;
 
 public abstract class Template {
 
@@ -19,20 +20,30 @@ public abstract class Template {
     public Animation<TextureRegion> stand;
     public Animation<TextureRegion> walk;
     public Animation<TextureRegion> jump;
-
-    enum State {
-        Standing, Walking, Jumping, Flying
-    }
-
+    //private final String username;
+    //private final Connection connection;
+    private float x;
+    private float y;
     public final Vector2 position = new Vector2();
     public final Vector2 velocity = new Vector2();
-    State state = State.Walking;
     public float stateTime = 0;
     public boolean facesRight = true;
     // todo: recordar como es que se usa el @Getter de lombok
     @Getter
     boolean grounded = false;
+    enum State {
+        Standing, Walking, Jumping, Flying
+    }
+    State state = State.Walking;
 
+
+    public float getX() {
+        return x;
+    }
+
+    public float getY() {
+        return y;
+    }
 
     public void setWidth(float width) {
         Template.WIDTH = width;

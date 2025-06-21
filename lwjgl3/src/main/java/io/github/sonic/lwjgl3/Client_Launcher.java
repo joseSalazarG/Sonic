@@ -1,17 +1,16 @@
 package io.github.sonic.lwjgl3;
 
 import Multiplayer.ClientListener;
-import Multiplayer.ServerListener;
-import Multiplayer.Mensaje;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.esotericsoftware.kryonet.Server;
-import main.Main;
+import main.Main_Client;
+import main.Main_Server;
 import com.esotericsoftware.kryonet.Client;
+
 import java.io.IOException;
 
-/** Launches the desktop (LWJGL3) application. */
-public class Lwjgl3Launcher {
+public class Client_Launcher {
+
     public static void main(String[] args) {
 
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
@@ -20,7 +19,8 @@ public class Lwjgl3Launcher {
             createApplication(iniciarCliente());
         } catch (IOException e) {
             // si no se conecta a un servidor entonces lo crea
-            createApplication(iniciarServer());
+            e.printStackTrace();
+            System.out.println("No se pudo conectar al servidor, iniciando cliente...");
         }
     }
 
@@ -32,31 +32,13 @@ public class Lwjgl3Launcher {
         return client;
     }
 
-    private static Server iniciarServer() {
-        Server server = new Server();
-        server.start();
-        try {
-            server.bind(54555, 54777);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        server.addListener(new ServerListener());
-        return server;
-    }
-
-
-
     private static Lwjgl3Application createApplication(Client client) {
-        return new Lwjgl3Application(new Main(client), getDefaultConfiguration());
-    }
-
-    private static Lwjgl3Application createApplication(Server server) {
-        return new Lwjgl3Application(new Main(server), getDefaultConfiguration());
+        return new Lwjgl3Application(new Main_Client(client), getDefaultConfiguration());
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
         Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
-        configuration.setTitle("sonic_libgdx");
+        configuration.setTitle("Cliente_libgdx");
         //// Vsync limits the frames per second to what your hardware can display, and helps eliminate
         //// screen tearing. This setting doesn't always work on Linux, so the line after is a safeguard.
         configuration.useVsync(true);

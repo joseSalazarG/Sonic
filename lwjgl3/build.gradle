@@ -76,6 +76,22 @@ jar {
   }
 }
 
+tasks.register('run_Cliente', JavaExec) {
+  group = 'application'
+  description = 'Ejecuta el cliente'
+  classpath = sourceSets.main.runtimeClasspath
+  mainClass.set('io.github.sonic.lwjgl3.Client_Launcher') // Cambia si tu clase cliente es otra
+  workingDir = rootProject.file('assets').path
+  if (os.contains('mac')) jvmArgs += "-XstartOnFirstThread"
+}
+
+tasks.register('run_Servidor', JavaExec) {
+  group = 'application'
+  description = 'Ejecuta el servidor'
+  classpath = sourceSets.main.runtimeClasspath
+  mainClass.set('io.github.sonic.lwjgl3.Server_Launcher') // Cambia por la clase principal de tu servidor
+}
+
 // Builds a JAR that only includes the files needed to run on macOS, not Windows or Linux.
 // The file size for a Mac-only JAR is about 7MB smaller than a cross-platform JAR.
 tasks.register("jarMac") {
