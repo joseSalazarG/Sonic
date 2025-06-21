@@ -1,5 +1,6 @@
 package GameSettings;
 
+import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.input.virtual.VirtualButton;
 import com.almasb.fxgl.multiplayer.MultiplayerService;
@@ -18,6 +19,7 @@ public class ClientGameApp extends GameApplication {
     private final int anchoPantalla = 1400;
     private final int altoPantalla = 700;
     private Connection<Bundle> conexion;
+    private Player player;
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -37,6 +39,16 @@ public class ClientGameApp extends GameApplication {
             System.out.println("Cliente conectado");
         });
         client.connectAsync();
+        Jugar();
+    }
+
+    private void Jugar(){
+        getGameWorld().addEntityFactory(new GameFactory());
+        spawn("fondo");
+        player = null;
+        Level level = setLevelFromMap("level.tmx");
+        player = (Player) spawn("sonic", 50, 150);
+        //SonicLogic.enviarMensaje();
     }
 
     private void onClient() {
@@ -56,10 +68,12 @@ public class ClientGameApp extends GameApplication {
             @Override
             protected void onAction() {
                 SonicLogic.enviarMensaje("Mover a la izquierda", conexion);
+                player.moverIzquierda();
             }
             @Override
             protected void onActionEnd() {
                 SonicLogic.enviarMensaje("Detente", conexion);
+                player.detener();
             }
         }, KeyCode.A, VirtualButton.LEFT);
 
@@ -67,10 +81,12 @@ public class ClientGameApp extends GameApplication {
             @Override
             protected void onAction() {
                 SonicLogic.enviarMensaje("Mover a la derecha", conexion);
+                player.moverDerecha();
             }
             @Override
             protected void onActionEnd() {
                 SonicLogic.enviarMensaje("Detente", conexion);
+                player.detener();
             }
         }, KeyCode.D, VirtualButton.RIGHT);
 
@@ -78,6 +94,7 @@ public class ClientGameApp extends GameApplication {
             @Override
             protected void onActionBegin() {
                 SonicLogic.enviarMensaje("Saltar", conexion);
+                player.saltar();
             }
         }, KeyCode.W, VirtualButton.A); // xbox
 

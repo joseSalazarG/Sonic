@@ -9,7 +9,8 @@ import static com.almasb.fxgl.dsl.FXGL.*;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
 import component.GameFactory;
-import component.PlayerComponent;
+import component.Personajes.PlayerComponent;
+import component.SonicLogic;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
         spawn("fondo");
         player = null;
         Level level = setLevelFromMap("level.tmx");
-        player = spawn("player", 50, 150);
+        //player = spawn("player", 50, 150);
     }
 
     public void onServer() {
@@ -70,6 +71,12 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     System.out.println("Jugador se detuvo");
                     player.getComponent(PlayerComponent.class).detener();
                     break;
+                case "Crear Sonic":
+                    for (Connection<Bundle> conn : conexiones) {
+                        if (conn != connection) {
+                            SonicLogic.enviarMensaje("Color nuevo", connection);
+                        }
+                    }
             }
         });
         conexiones.add(conexion);

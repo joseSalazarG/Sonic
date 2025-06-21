@@ -1,4 +1,4 @@
-package component;
+package component.Personajes;
 
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.physics.PhysicsComponent;
@@ -9,15 +9,14 @@ import javafx.scene.image.Image;
 import javafx.util.Duration;
 import static com.almasb.fxgl.dsl.FXGL.image;
 
-public class PlayerComponent extends Component {
+public abstract class PlayerComponent extends Component {
 
-    private PhysicsComponent physics;
-
-    private AnimatedTexture texture;
-
-    private AnimationChannel parado, caminando;
-
-    private int saltosPermitidos = 2;
+    protected PhysicsComponent physics;
+    protected AnimatedTexture texture;
+    protected AnimationChannel parado, caminando;
+    protected int saltosPermitidos = 2;
+    protected int velocidad_lateral_base = 400; // Default horizontal speed
+    protected int velocidad_vertical_base = 250;
 
     public PlayerComponent() {
 
@@ -57,12 +56,12 @@ public class PlayerComponent extends Component {
 
     public void moverIzquierda() {
         getEntity().setScaleX(-1);
-        physics.setVelocityX(-400);
+        physics.setVelocityX(-velocidad_lateral_base);
     }
 
     public void moverDerecha() {
         getEntity().setScaleX(1);
-        physics.setVelocityX(400);
+        physics.setVelocityX(velocidad_lateral_base);
     }
 
     public void detener() {
@@ -73,7 +72,7 @@ public class PlayerComponent extends Component {
         if (saltosPermitidos == 0)
             return;
 
-        physics.setVelocityY(-250);
+        physics.setVelocityY(-velocidad_vertical_base); // negativo para ir hacia arriba
 
         saltosPermitidos--;
     }
