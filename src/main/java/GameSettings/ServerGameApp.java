@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.UUID;
 
 public class ServerGameApp extends GameApplication implements Serializable{
-    private final int anchoPantalla = 1400;
-    private final int altoPantalla = 700;
+    private final int anchoPantalla = 500;
+    private final int altoPantalla = 300;
     private Connection<Bundle> conexion;
     private List<Connection> conexiones = new ArrayList<>();
     private List<Bundle> personajesExistentes = new ArrayList<>();
@@ -72,7 +72,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     }
                 }
                 break;
-
+            // manda una actualizacion con la posicion de cada personaje
             case "SyncPos":
                 String syncId = bundle.get("id");
                 for (Bundle personaje : personajesExistentes) {
@@ -83,7 +83,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
                         break;
                     }
                 }
-                for (Connection<Bundle> conn : conexiones) {
+                for (Connection conn : conexiones) {
                     if (conn != connection) {
                         conn.send(bundle);
                     }
@@ -111,7 +111,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
     });
     conexiones.add(conexion);
 
-    // Le pregunte a gpt y me dijo que deberia acomodar el retraso, pero es pura paja
+    // supuestamente acomoda el retraso, pero es pura paja
     for (Bundle personajeBundle : personajesExistentes) {
         Bundle crear = new Bundle("Crear Personaje");
         crear.put("id", personajeBundle.get("id"));
