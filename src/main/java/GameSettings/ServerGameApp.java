@@ -15,12 +15,14 @@ import component.GameLogic;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class ServerGameApp extends GameApplication implements Serializable{
     private final int anchoPantalla = 1400;
     private final int altoPantalla = 700;
     private Connection<Bundle> conexion;
     private List<Connection> conexiones = new ArrayList<>();
+    private List<Bundle> personajesExistentes = new ArrayList<>();
     private Player player;
 
     @Override
@@ -35,13 +37,19 @@ public class ServerGameApp extends GameApplication implements Serializable{
     protected void initGame() {
         var server = getNetService().newTCPServer(55555);
         server.setOnConnected(conn -> {
+            // Genera un id unico para el nuevo cliente
+            String nuevoId = UUID.randomUUID().toString();
+            Bundle tuId = new Bundle("TuID");
+            tuId.put("id", nuevoId);
+            conn.send(tuId);
+
             conexion = conn;
             getExecutor().startAsyncFX(this::onServer);
         });
         System.out.println("Servidor creado");
         server.startAsync();
         Jugar();
-    }
+}
 
     private void Jugar(){
         getGameWorld().addEntityFactory(new GameFactory());
@@ -52,65 +60,72 @@ public class ServerGameApp extends GameApplication implements Serializable{
     }
 
     public void onServer() {
-        // manejo de mensajes
-        
-        conexion.addMessageHandlerFX((connection, bundle) -> {
-            switch (bundle.getName()) {
-
-                case "Mover a la izquierda":
-                    System.out.println("Jugador movio a la izquierda");
-                    //player.getComponent(PlayerComponent.class).moverIzquierda();
-                    break;
-
-                case "Mover a la derecha":
-                    System.out.println("Jugador movio a la derecha");
-                    //player.getComponent(PlayerComponent.class).moverDerecha();
-                    break;
-
-                case "Saltar":
-                    System.out.println("Jugador salto");
-                    //player.getComponent(PlayerComponent.class).saltar();
-                    break;
-
-                case "Detente":
-                    System.out.println("Jugador se detuvo");
-                    //player.getComponent(PlayerComponent.class).detener();
-                    break;
-
-                case "Crear Sonic":
-                    // responderle al cliente que envio el mensaje
-                    GameLogic.enviarMensaje("Crear Sonic", connection);
-                    // para decirle a los demas que un jugador escogio Sonic
-                    for (Connection<Bundle> conn : conexiones) {
-                        if (conn != connection) {
-                            GameLogic.enviarMensaje("Alguien escogio Sonic", connection);
-                        }
+    conexion.addMessageHandlerFX((connection, bundle) -> {
+        switch (bundle.getName()) {
+            case "Mover a la izquierda":
+            case "Mover a la derecha":
+            case "Saltar":
+            case "Detente":
+                for (Connection<Bundle> conn : conexiones) {
+                    if (conn != connection) {
+                        conn.send(bundle);
                     }
-                    break;
-             
-                case "Crear Tails":
-                    
-                    for (Connection<Bundle> conn : conexiones) {
-                        if (conn != connection) {
+                }
+                break;
 
-                        }
-                        //
+            case "SyncPos":
+                String syncId = bundle.get("id");
+                for (Bundle personaje : personajesExistentes) {
+                    Object personajeId = personaje.get("id");
+                    if (personajeId != null && personajeId.equals(syncId)) {
+                        personaje.put("x", bundle.get("x"));
+                        personaje.put("y", bundle.get("y"));
+                        break;
                     }
-                    break;
+                }
+                for (Connection<Bundle> conn : conexiones) {
+                    if (conn != connection) {
+                        conn.send(bundle);
+                    }
+                }
+                break;
 
-                case "Hola":
-                    System.out.println("sonic se conecto");
-                    break;
-            }
-        });
-        conexiones.add(conexion);
-    }
+            case "Crear Personaje":
+                boolean existe = personajesExistentes.stream().anyMatch(
+                    b -> b.get("id").equals(bundle.get("id"))
+                );
+                if (!existe) {
+                    personajesExistentes.add(bundle);
+                }
+                for (Connection<Bundle> conn : conexiones) {
+                    if (conn != connection) {
+                        conn.send(bundle);
+                    }
+                }
+                break;
 
-    /*
-    public void enviarCarta(){
-        for (Connection conn : conexiones) {
-            UnoLogic.enviarMensaje("Nueva carta del servidor", carta_del_servidor, conn);
+            case "Hola":
+                System.out.println("sonic se conecto");
+                break;
         }
+    });
+    conexiones.add(conexion);
+
+    // Le pregunte a gpt y me dijo que deberia acomodar el retraso, pero es pura paja
+    for (Bundle personajeBundle : personajesExistentes) {
+        Bundle crear = new Bundle("Crear Personaje");
+        crear.put("id", personajeBundle.get("id"));
+        crear.put("tipo", personajeBundle.get("tipo"));
+        crear.put("x", personajeBundle.get("x"));
+        crear.put("y", personajeBundle.get("y"));
+        conexion.send(crear);
+
+        Bundle sync = new Bundle("SyncPos");
+        sync.put("id", personajeBundle.get("id"));
+        sync.put("x", personajeBundle.get("x"));
+        sync.put("y", personajeBundle.get("y"));
+        conexion.send(sync);
     }
-    */
+}
+
 }

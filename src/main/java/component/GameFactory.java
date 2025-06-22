@@ -22,6 +22,7 @@ import com.almasb.fxgl.entity.Spawns;
 import GameSettings.Player;
 
 public class GameFactory implements EntityFactory {
+    
 
     public enum EntityType {
         PLAYER, FONDO, PLATAFORMA, KNUCKLES
@@ -118,10 +119,13 @@ public class GameFactory implements EntityFactory {
 
     @Spawns("plataforma")
     public Entity newPlatform(SpawnData data) {
+        PhysicsComponent physics = new PhysicsComponent();
+        physics.setBodyType(BodyType.STATIC);
+
         return entityBuilder(data)
                 .type(EntityType.PLATAFORMA)
                 .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width"), data.<Integer>get("height"))))
-                .with(new PhysicsComponent())
+                .with(physics)
                 .build();
     }
 
