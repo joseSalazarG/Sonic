@@ -118,10 +118,10 @@ public class ClientGameApp extends GameApplication {
     }
 
     private void onClient() {
-        conexion.addMessageHandlerFX((conexion, bundleMsg) -> {
-            switch (bundleMsg.getName()) {
+        conexion.addMessageHandlerFX((conexion, mensaje) -> {
+            switch (mensaje.getName()) {
                 case "TuID": {
-                    miID = bundleMsg.get("id");
+                    miID = mensaje.get("id");
                     player = (Player) spawn(personajeSeleccionado, 50, 150);
 
                     Bundle crearPersonaje = new Bundle("Crear Personaje");
@@ -135,10 +135,10 @@ public class ClientGameApp extends GameApplication {
 
 
                 case "Crear Personaje": {
-                    String id = bundleMsg.get("id");
-                    String tipo = bundleMsg.get("tipo");
-                    Number xNum = bundleMsg.get("x");
-                    Number yNum = bundleMsg.get("y");
+                    String id = mensaje.get("id");
+                    String tipo = mensaje.get("tipo");
+                    Number xNum = mensaje.get("x");
+                    Number yNum = mensaje.get("y");
                     double x = xNum.doubleValue();
                     double y = yNum.doubleValue();
                     if (!id.equals(miID)) {
@@ -154,11 +154,11 @@ public class ClientGameApp extends GameApplication {
                 case "Mover a la derecha":
                 case "Saltar":
                 case "Detente": {
-                    String moveId = bundleMsg.get("id");
+                    String moveId = mensaje.get("id");
                     if (moveId.equals(miID)) return; // Ignora tus propios mensajes
                     Player remotePlayer = personajeRemotos.get(moveId);
                     if (remotePlayer == null) return;
-                    switch (bundleMsg.getName()) {
+                    switch (mensaje.getName()) {
                         case "Mover a la izquierda":
                             remotePlayer.moverIzquierda();
                             break;
@@ -175,12 +175,12 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
                 case "SyncPos": {
-                    String syncId = bundleMsg.get("id");
+                    String syncId = mensaje.get("id");
                     if (syncId.equals(miID)) return;
                     Player remotePlayer = personajeRemotos.get(syncId);
                     if (remotePlayer != null) {
-                        Number xNum = bundleMsg.get("x");
-                        Number yNum = bundleMsg.get("y");
+                        Number xNum = mensaje.get("x");
+                        Number yNum = mensaje.get("y");
                         remotePlayer.setX(xNum.doubleValue());
                         remotePlayer.setY(yNum.doubleValue());
                     }

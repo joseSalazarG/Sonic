@@ -91,9 +91,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
                 break;
 
             case "Crear Personaje":
-                boolean existe = personajesExistentes.stream().anyMatch(
-                    b -> b.get("id").equals(bundle.get("id"))
-                );
+                boolean existe = personajesExistentes.stream().anyMatch(b -> b.get("id").equals(bundle.get("id")));
                 if (!existe) {
                     personajesExistentes.add(bundle);
                 }
@@ -106,6 +104,10 @@ public class ServerGameApp extends GameApplication implements Serializable{
 
             case "Hola":
                 System.out.println("sonic se conecto");
+                break;
+
+            default:
+                System.out.println("este es el default");
                 break;
         }
     });
