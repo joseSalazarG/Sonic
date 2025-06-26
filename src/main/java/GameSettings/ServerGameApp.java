@@ -57,7 +57,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
 
             conexiones.add(conn); // Agrega la conexion a la lista
 
-            getExecutor().startAsyncFX(() -> onServer(conn)); // Pasa la conexión específica
+            getExecutor().startAsyncFX(() -> onServer(conn));
         });
         System.out.println("Servidor creado");
         server.startAsync();
