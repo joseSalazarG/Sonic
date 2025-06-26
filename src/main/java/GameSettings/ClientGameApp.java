@@ -1,11 +1,12 @@
 package GameSettings;
 
-import com.almasb.fxgl.entity.components.CollidableComponent;
+import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.input.virtual.VirtualButton;
 import com.almasb.fxgl.multiplayer.MultiplayerService;
 import com.almasb.fxgl.core.serialization.Bundle;
+import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.app.GameApplication;
 import static com.almasb.fxgl.dsl.FXGL.*;
 
@@ -14,25 +15,16 @@ import java.util.Map;
 
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
-import com.almasb.fxgl.physics.PhysicsComponent;
-import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
-
-import component.GameLogic;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import component.GameFactory;
-
-import javafx.scene.control.Button;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.stage.Stage;
 
-// TODO arreglar colisiones y spawn del jugador 1 en la pantalla del jugador 2
+// TODO arreglar empujes entre entidades para mejor sincronizacion
 
 public class ClientGameApp extends GameApplication {
 
@@ -42,6 +34,9 @@ public class ClientGameApp extends GameApplication {
     private Map<String, Player> personajeRemotos = new HashMap<>();
     private Player player;
     private String miID;
+    private String personajePendiente = null;
+    private int contadorAnillos = 0;
+    private Text textoAnillos;
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -51,14 +46,9 @@ public class ClientGameApp extends GameApplication {
         gameSettings.addEngineService(MultiplayerService.class);
     }
 
-    private String personajeSeleccionado = null;
-
     @Override
     protected void initGame() {
-        miID = java.util.UUID.randomUUID().toString();
         getGameWorld().addEntityFactory(new GameFactory());
-
-        // Menu de furros
         showCharacterSelectionMenu();
     }
 
@@ -73,17 +63,20 @@ public class ClientGameApp extends GameApplication {
             Button btnKnuckles = new Button("Knuckles");
 
             btnSonic.setOnAction(e -> {
-                personajeSeleccionado = "sonic";
+                personajePendiente = "sonic";
+                
                 stage.close();
                 startNetworkAndGame();
             });
             btnTails.setOnAction(e -> {
-                personajeSeleccionado = "tails";
+                personajePendiente = "tails";
+                
                 stage.close();
                 startNetworkAndGame();
             });
             btnKnuckles.setOnAction(e -> {
-                personajeSeleccionado = "knuckles";
+                personajePendiente = "knuckles";
+                
                 stage.close();
                 startNetworkAndGame();
             });
@@ -96,69 +89,119 @@ public class ClientGameApp extends GameApplication {
         });
     }
 
-     private void startNetworkAndGame() {
+    private void startNetworkAndGame() {
         spawn("fondo");
         setLevelFromMap("level.tmx");
-
         var client = getNetService().newTCPClient("localhost", 55555);
         client.setOnConnected(conn -> {
             conexion = conn;
+            Bundle hola = new Bundle("Hola");
+            conn.send(hola);
             getExecutor().startAsyncFX(() -> onClient());
             System.out.println("Cliente conectado");
         });
         client.connectAsync();
     }
 
-    private void Jugar() {
-        getGameWorld().addEntityFactory(new GameFactory());
-        //
-        spawn("fondo");
-        Level level = setLevelFromMap("level.tmx");
-        //GameLogic.enviarMensaje("Crear Sonic", conexion);
-    }
-
     private void onClient() {
-        conexion.addMessageHandlerFX((conexion, bundleMsg) -> {
-            switch (bundleMsg.getName()) {
+        conexion.addMessageHandlerFX((conexion, bundle) -> {
+            switch (bundle.getName()) {
                 case "TuID": {
-                    miID = bundleMsg.get("id");
-                    player = (Player) spawn(personajeSeleccionado, 50, 150);
+                    miID = bundle.get("id");
+                    Bundle solicitar = new Bundle("SolicitarCrearPersonaje");
+                    solicitar.put("id", miID);
+                    solicitar.put("tipo", personajePendiente);
+                    conexion.send(solicitar);
 
-                    Bundle crearPersonaje = new Bundle("Crear Personaje");
-                    crearPersonaje.put("id", miID);
-                    crearPersonaje.put("tipo", personajeSeleccionado);
-                    crearPersonaje.put("x", 50);
-                    crearPersonaje.put("y", 150);
-                    conexion.send(crearPersonaje);
+                    // Envia posición inicial para sincronizar servidor
+                    Bundle sync = new Bundle("SyncPos");
+                    sync.put("id", miID);
+                    sync.put("x", 50);
+                    sync.put("y", 150);
+                    conexion.send(sync);
+                    break;
+                }
+
+                case "CrearRobotEnemigo": {
+                    Number xNum = bundle.get("x");
+                    Number yNum = bundle.get("y");
+                    double x = xNum.doubleValue();
+                    double y = yNum.doubleValue();
+                    if (getGameWorld().getEntitiesByType(component.GameFactory.EntityType.ROBOT_ENEMIGO).isEmpty()) {
+                        spawn("robotEnemigo", x, y);
+                    }
+                    break;
+                }
+
+                case "crearRing": {
+                    double x = ((Number) bundle.get("x")).doubleValue();
+                    double y = ((Number) bundle.get("y")).doubleValue();
+                    String id = bundle.get("id");
+
+                    Entity ring = spawn("ring", x, y);
+                    ring.getProperties().setValue("id", id); // Guarda el id para identificarlo luego
+                    break;
+                }
+
+                case "AnilloRecogido": {
+                    String ringId = bundle.get("ringId");
+
+                    getGameWorld().getEntitiesByType(GameFactory.EntityType.RING).stream()
+                        .filter(r -> ringId.equals(r.getProperties().getString("id")))
+                        .findFirst()
+                        .ifPresent(Entity::removeFromWorld);
+
+                    // Actualiza contador si el jugador es uno mismo
+                    String playerId = bundle.get("playerId");
+                    if (playerId.equals(miID)) {
+                        contadorAnillos++;
+                        textoAnillos.setText("anillos: " + contadorAnillos);
+                    }
                     break;
                 }
 
 
                 case "Crear Personaje": {
-                    String id = bundleMsg.get("id");
-                    String tipo = bundleMsg.get("tipo");
-                    Number xNum = bundleMsg.get("x");
-                    Number yNum = bundleMsg.get("y");
-                    double x = xNum.doubleValue();
-                    double y = yNum.doubleValue();
-                    if (!id.equals(miID)) {
-                        System.out.println("Creando jugador remoto: " + id);
-                        Player remotePlayer = (Player) spawn(tipo, x, y);
-                        personajeRemotos.put(id, remotePlayer);
+                    String id = bundle.get("id");
+                    String tipo = bundle.get("tipo");
+                    double x = ((Number)bundle.get("x")).doubleValue();
+                    double y = ((Number)bundle.get("y")).doubleValue();
+
+                    if (id.equals(miID)) {
+                        if (player == null) {
+                            Entity entidad = spawn(tipo, x, y);
+                            player = (Player) entidad;
+                        } else {
+                            player.setX(x);
+                            player.setY(y);
+                        }
                     } else {
-                        System.out.println("Creando jugador local: " + id);
+                        Player remotePlayer = personajeRemotos.get(id);
+                        if (remotePlayer == null) {
+                            Entity entidad = spawn(tipo, x, y);
+                            remotePlayer = (Player) entidad;;
+                            personajeRemotos.put(id, remotePlayer);
+                        } else {
+                            remotePlayer.setX(x);
+                            remotePlayer.setY(y);
+                        }
                     }
                     break;
                 }
+
                 case "Mover a la izquierda":
                 case "Mover a la derecha":
                 case "Saltar":
                 case "Detente": {
-                    String moveId = bundleMsg.get("id");
-                    if (moveId.equals(miID)) return; // Ignora tus propios mensajes
+                    String moveId = bundle.get("id");
+                    if (moveId.equals(miID)) {
+                        return; // Ignora tus propios mensajes
+                    }
                     Player remotePlayer = personajeRemotos.get(moveId);
-                    if (remotePlayer == null) return;
-                    switch (bundleMsg.getName()) {
+                    if (remotePlayer == null) {
+                        return;
+                    }
+                    switch (bundle.getName()) {
                         case "Mover a la izquierda":
                             remotePlayer.moverIzquierda();
                             break;
@@ -175,17 +218,32 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
                 case "SyncPos": {
-                    String syncId = bundleMsg.get("id");
-                    if (syncId.equals(miID)) return;
+                    String syncId = bundle.get("id");
+                    if (syncId.equals(miID)) {
+                        return; // Ignorarte a ti mismo
+                    }
+
                     Player remotePlayer = personajeRemotos.get(syncId);
                     if (remotePlayer != null) {
-                        Number xNum = bundleMsg.get("x");
-                        Number yNum = bundleMsg.get("y");
+                        Number xNum = bundle.get("x");
+                        Number yNum = bundle.get("y");
                         remotePlayer.setX(xNum.doubleValue());
                         remotePlayer.setY(yNum.doubleValue());
+                    } else {
                     }
                     break;
                 }
+                case "SyncRobotPos": {
+                    var robots = getGameWorld().getEntitiesByType(GameFactory.EntityType.ROBOT_ENEMIGO);
+                    if (!robots.isEmpty()) {
+                        Entity robot = robots.get(0);
+                        double x = ((Number) bundle.get("x")).doubleValue();
+                        double y = ((Number) bundle.get("y")).doubleValue();
+                        robot.setPosition(x, y);
+                    }
+                    break;
+                }
+
             }
         });
     }
@@ -205,50 +263,97 @@ public class ClientGameApp extends GameApplication {
             
     @Override
     protected void initInput() {
-        //fixme: No funciona los botones virtuales en el cliente, no se por qué
-       getInput().addAction(new UserAction("Mover a la izquierda") {
+        getInput().addAction(new UserAction("Mover a la izquierda") {
             @Override
             protected void onAction() {
+                if (player == null) return;
                 Bundle bundle = new Bundle("Mover a la izquierda");
                 bundle.put("id", miID);
                 conexion.send(bundle);
                 player.moverIzquierda();
+                Bundle sync = new Bundle("SyncPos");
+                sync.put("id", miID);
+                sync.put("x", player.getX());
+                sync.put("y", player.getY());
+                conexion.send(sync);
             }
             @Override
             protected void onActionEnd() {
+                if (player == null) return;
                 Bundle bundle = new Bundle("Detente");
                 bundle.put("id", miID);
                 conexion.send(bundle);
                 player.detener();
+                Bundle sync = new Bundle("SyncPos");
+                sync.put("id", miID);
+                sync.put("x", player.getX());
+                sync.put("y", player.getY());
+                conexion.send(sync);
             }
         }, KeyCode.A, VirtualButton.LEFT);
 
-         getInput().addAction(new UserAction("Mover a la derecha") {
+        getInput().addAction(new UserAction("Mover a la derecha") {
             @Override
             protected void onAction() {
+                if (player == null) return;
                 Bundle bundle = new Bundle("Mover a la derecha");
                 bundle.put("id", miID);
                 conexion.send(bundle);
                 player.moverDerecha();
+                Bundle sync = new Bundle("SyncPos");
+                sync.put("id", miID);
+                sync.put("x", player.getX());
+                sync.put("y", player.getY());
+                conexion.send(sync);
             }
             @Override
             protected void onActionEnd() {
+                if (player == null) return;
                 Bundle bundle = new Bundle("Detente");
                 bundle.put("id", miID);
                 conexion.send(bundle);
                 player.detener();
+                Bundle sync = new Bundle("SyncPos");
+                sync.put("id", miID);
+                sync.put("x", player.getX());
+                sync.put("y", player.getY());
+                conexion.send(sync);
             }
         }, KeyCode.D, VirtualButton.RIGHT);
 
         getInput().addAction(new UserAction("Saltar") {
             @Override
             protected void onActionBegin() {
+                if (player == null) return;
                 Bundle bundle = new Bundle("Saltar");
                 bundle.put("id", miID);
                 conexion.send(bundle);
                 player.saltar();
+                Bundle sync = new Bundle("SyncPos");
+                sync.put("id", miID);
+                sync.put("x", player.getX());
+                sync.put("y", player.getY());
+                conexion.send(sync);
             }
         }, KeyCode.W, VirtualButton.A);
+    }
 
-    };
+    @Override
+    protected void initUI() {
+        textoAnillos = new Text("anillos: 0");
+        textoAnillos.setStyle("-fx-font-size: 24px; -fx-fill: white;");
+        addUINode(textoAnillos, 20, 20);
+    }
+
+    @Override
+    protected void initPhysics() {
+        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.RING, (player, ring) -> {
+            String ringId = ring.getProperties().getString("id");
+            Bundle recoger = new Bundle("RecogerAnillo");
+            recoger.put("ringId", ringId);
+            recoger.put("playerId", miID);
+            conexion.send(recoger);
+        });
+    }
+
 }

@@ -5,6 +5,9 @@ import com.almasb.fxgl.entity.components.CollidableComponent;
 import com.almasb.fxgl.entity.components.IrremovableComponent;
 import com.almasb.fxgl.entity.EntityFactory;
 import static com.almasb.fxgl.dsl.FXGL.*;
+
+import java.util.UUID;
+
 import com.almasb.fxgl.entity.SpawnData;
 
 import com.almasb.fxgl.physics.BoundingShape;
@@ -25,7 +28,7 @@ public class GameFactory implements EntityFactory {
     
 
     public enum EntityType {
-        PLAYER, FONDO, PLATAFORMA, KNUCKLES
+        PLAYER, FONDO, PLATAFORMA, ROBOT_ENEMIGO, RING
     }
 
     @Spawns("fondo")
@@ -57,22 +60,29 @@ public class GameFactory implements EntityFactory {
                 .build();
     } */
 
-    @Spawns("knuckles")
-    public Player knuckles(SpawnData data) {
+       @Spawns("sonic")
+    public Player sonic(SpawnData data) {
         PhysicsComponent physics = new PhysicsComponent();
-        physics.setBodyType(BodyType.DYNAMIC);
+        physics.setBodyType(BodyType.DYNAMIC);  
         physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
-        // this avoids player sticking to walls
-        physics.setFixtureDef(new FixtureDef().friction(0.0f));
+
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.setFriction(0.01f);  // friction super low
+        fixtureDef.setRestitution(0.0f);
+        physics.setFixtureDef(fixtureDef);
 
         Player player = new Player();
-        player.setType(EntityType.KNUCKLES);
-        player.bbox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
-        player.bbox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
+
+        player.setType(EntityType.PLAYER);
+        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
+        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
+
         player.addComponent(physics);
         player.addComponent(new CollidableComponent(true));
         player.addComponent(new IrremovableComponent());
-        player.addComponent(new KnucklesComponent());
+        player.addComponent(new SonicComponent());
+
+        player.setPosition(data.getX(), data.getY());
 
         return player;
     }
@@ -82,40 +92,57 @@ public class GameFactory implements EntityFactory {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setBodyType(BodyType.DYNAMIC);
         physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
-        // this avoids player sticking to walls
-        physics.setFixtureDef(new FixtureDef().friction(0.0f));
+
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.setFriction(0.01f);  // friction super low
+        fixtureDef.setRestitution(0.0f);
+        physics.setFixtureDef(fixtureDef);
 
         Player player = new Player();
+
         player.setType(EntityType.PLAYER);
-        player.bbox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
-        player.bbox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
+        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
+        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
+
         player.addComponent(physics);
         player.addComponent(new CollidableComponent(true));
         player.addComponent(new IrremovableComponent());
         player.addComponent(new TailsComponent());
 
+        player.setPosition(data.getX(), data.getY());
+
         return player;
     }
 
-    @Spawns("sonic")
-    public Player sonic(SpawnData data) {
+    @Spawns("knuckles")
+    public Player knuckles(SpawnData data) {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setBodyType(BodyType.DYNAMIC);
         physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
-        // this avoids player sticking to walls
-        physics.setFixtureDef(new FixtureDef().friction(0.0f));
+
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.setFriction(0.01f);  // friction super low
+        fixtureDef.setRestitution(0.0f);
+        physics.setFixtureDef(fixtureDef);
 
         Player player = new Player();
+
         player.setType(EntityType.PLAYER);
-        player.bbox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
-        player.bbox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
+        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
+        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
+
         player.addComponent(physics);
         player.addComponent(new CollidableComponent(true));
         player.addComponent(new IrremovableComponent());
-        player.addComponent(new SonicComponent());
+        player.addComponent(new KnucklesComponent());
+
+        player.setPosition(data.getX(), data.getY());
 
         return player;
     }
+
+
+
 
     @Spawns("plataforma")
     public Entity newPlatform(SpawnData data) {
@@ -127,6 +154,33 @@ public class GameFactory implements EntityFactory {
                 .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width"), data.<Integer>get("height"))))
                 .with(physics)
                 .build();
+    }
+
+    @Spawns("robotEnemigo")
+    public Entity robotEnemigo(SpawnData data) {
+        PhysicsComponent physics = new PhysicsComponent();
+        physics.setBodyType(BodyType.DYNAMIC);
+
+        return entityBuilder(data)
+                .type(EntityType.ROBOT_ENEMIGO)
+                .bbox(new HitBox(new Point2D(0, 0), BoundingShape.circle(24))) // radio 32 centrada
+                .with(physics)
+                .with(new CollidableComponent(true))
+                .with(new component.Enemigos.RobotComponent())
+                .build();
+    }
+
+    @Spawns("ring")
+    public Entity ring(SpawnData data) {
+        Entity ring = entityBuilder(data)
+                .type(EntityType.RING)
+                .bbox(new HitBox(new Point2D(0, 0), BoundingShape.circle(12))) 
+                .with(new component.Items.RingComponent())
+                .with(new CollidableComponent(true))
+                .with("ringId", UUID.randomUUID().toString())
+                .build();
+        ring.getProperties().setValue("id", java.util.UUID.randomUUID().toString());
+        return ring;
     }
 
 }
