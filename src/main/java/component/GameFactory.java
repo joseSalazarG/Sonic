@@ -67,7 +67,7 @@ public class GameFactory implements EntityFactory {
         physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
 
         FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.setFriction(0.01f);  // friction super low
+        fixtureDef.setFriction(0.01f);  // Esto es lo mejor que encontre para reducir al minimo los empujes, pero no lo soluciona
         fixtureDef.setRestitution(0.0f);
         physics.setFixtureDef(fixtureDef);
 
@@ -94,7 +94,7 @@ public class GameFactory implements EntityFactory {
         physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
 
         FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.setFriction(0.01f);  // friction super low
+        fixtureDef.setFriction(0.01f);  
         fixtureDef.setRestitution(0.0f);
         physics.setFixtureDef(fixtureDef);
 
@@ -121,7 +121,7 @@ public class GameFactory implements EntityFactory {
         physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
 
         FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.setFriction(0.01f);  // friction super low
+        fixtureDef.setFriction(0.01f);  
         fixtureDef.setRestitution(0.0f);
         physics.setFixtureDef(fixtureDef);
 
