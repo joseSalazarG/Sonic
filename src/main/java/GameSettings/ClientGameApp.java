@@ -186,6 +186,8 @@ public class ClientGameApp extends GameApplication {
                             remotePlayer.setY(y);
                         }
                     }
+                    getGameScene().getViewport().bindToEntity(player, anchoPantalla / 2.0, altoPantalla / 2.0);
+                    getGameScene().getViewport().setLazy(true);
                     break;
                 }
 
