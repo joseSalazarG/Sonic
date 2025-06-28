@@ -95,8 +95,6 @@ public class ClientGameApp extends GameApplication {
         var client = getNetService().newTCPClient("localhost", 55555);
         client.setOnConnected(conn -> {
             conexion = conn;
-            Bundle hola = new Bundle("Hola");
-            conn.send(hola);
             getExecutor().startAsyncFX(() -> onClient());
             System.out.println("Cliente conectado");
         });
@@ -171,6 +169,9 @@ public class ClientGameApp extends GameApplication {
                         if (player == null) {
                             Entity entidad = spawn(tipo, x, y);
                             player = (Player) entidad;
+                            // mitad de la pantalla en x, y un poco mas abajo en y
+                            getGameScene().getViewport().bindToEntity(player, anchoPantalla/2.0, altoPantalla/1.75);
+                            getGameScene().getViewport().setLazy(true);
                         } else {
                             player.setX(x);
                             player.setY(y);
@@ -186,9 +187,7 @@ public class ClientGameApp extends GameApplication {
                             remotePlayer.setY(y);
                         }
                     }
-                    // mitad de la pantalla en x, y un poco mas abajo en y
-                    getGameScene().getViewport().bindToEntity(player, anchoPantalla/2.0, altoPantalla/1.75);
-                    getGameScene().getViewport().setLazy(true);
+
                     break;
                 }
 

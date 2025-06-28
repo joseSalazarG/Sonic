@@ -30,10 +30,10 @@ public class ServerGameApp extends GameApplication implements Serializable{
     private Player player;
 
     List<int[]> posicionesRings = List.of(
-        new int[]{300, 480},
-        new int[]{400, 480},
-        new int[]{500, 480},
-        new int[]{600, 480}
+        new int[]{300, 1500},
+        new int[]{400, 1500},
+        new int[]{500, 1500},
+        new int[]{600, 1500}
         // mas anillos 
     );
 
