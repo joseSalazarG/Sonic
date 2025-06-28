@@ -91,7 +91,7 @@ public class ClientGameApp extends GameApplication {
 
     private void startNetworkAndGame() {
         spawn("fondo");
-        setLevelFromMap("level.tmx");
+        setLevelFromMap("test - copia.tmx");
         var client = getNetService().newTCPClient("localhost", 55555);
         client.setOnConnected(conn -> {
             conexion = conn;
@@ -186,7 +186,8 @@ public class ClientGameApp extends GameApplication {
                             remotePlayer.setY(y);
                         }
                     }
-                    getGameScene().getViewport().bindToEntity(player, anchoPantalla / 2.0, altoPantalla / 2.0);
+                    // mitad de la pantalla en x, y un poco mas abajo en y
+                    getGameScene().getViewport().bindToEntity(player, anchoPantalla/2.0, altoPantalla/1.75);
                     getGameScene().getViewport().setLazy(true);
                     break;
                 }

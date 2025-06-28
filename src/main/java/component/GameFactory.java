@@ -28,7 +28,7 @@ public class GameFactory implements EntityFactory {
     
 
     public enum EntityType {
-        PLAYER, FONDO, PLATAFORMA, ROBOT_ENEMIGO, RING
+        PLAYER, FONDO, TIERRA, ROBOT_ENEMIGO, RING, AGUA
     }
 
     @Spawns("fondo")
@@ -150,7 +150,19 @@ public class GameFactory implements EntityFactory {
         physics.setBodyType(BodyType.STATIC);
 
         return entityBuilder(data)
-                .type(EntityType.PLATAFORMA)
+                .type(EntityType.TIERRA)
+                .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width"), data.<Integer>get("height"))))
+                .with(physics)
+                .build();
+    }
+
+    @Spawns("agua")
+    public Entity newAgua(SpawnData data) {
+        PhysicsComponent physics = new PhysicsComponent();
+        physics.setBodyType(BodyType.STATIC);
+
+        return entityBuilder(data)
+                .type(EntityType.AGUA)
                 .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width"), data.<Integer>get("height"))))
                 .with(physics)
                 .build();

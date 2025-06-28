@@ -68,11 +68,11 @@ public class ServerGameApp extends GameApplication implements Serializable{
         getGameWorld().addEntityFactory(new GameFactory());
         spawn("fondo");
         player = null;
-        Level level = setLevelFromMap("level.tmx");
+        Level level = setLevelFromMap("test - copia.tmx");
         //player = spawn("player", 50, 150);
 
         // Spawnea el robot enemigo
-        spawn("robotEnemigo", 480, 480);
+        //spawn("robotEnemigo", 480, 480);
 
         // Spawnea todos los anillos en el servidor
         for (int[] pos : posicionesRings) {
