@@ -17,6 +17,7 @@ public abstract class PlayerComponent extends Component {
     protected int saltosPermitidos = 2;
     protected int velocidad_lateral_base = 400; // Default horizontal speed
     protected int velocidad_vertical_base = 250;
+    static int MAX_SALTOS = 2;
 
     public PlayerComponent() {
 
@@ -36,7 +37,7 @@ public abstract class PlayerComponent extends Component {
 
         physics.onGroundProperty().addListener((obs, old, tocandoPiso) -> {
             if (tocandoPiso) {
-                saltosPermitidos = 2;
+                saltosPermitidos = MAX_SALTOS;
             }
         });
     }

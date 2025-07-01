@@ -18,6 +18,7 @@ import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
 import component.Personajes.KnucklesComponent;
 import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
+import component.Items.TrashComponent;
 import javafx.geometry.Point2D;
 
 import com.almasb.fxgl.entity.Entity;
@@ -28,7 +29,7 @@ public class GameFactory implements EntityFactory {
     
 
     public enum EntityType {
-        PLAYER, FONDO, TIERRA, ROBOT_ENEMIGO, RING, AGUA
+        PLAYER, FONDO, TIERRA, ROBOT_ENEMIGO, RING, AGUA, BASURA
     }
 
     @Spawns("fondo")
@@ -37,6 +38,7 @@ public class GameFactory implements EntityFactory {
                 .view(new ScrollingBackgroundView(texture("background/forest.png").getImage(), getAppWidth(), getAppHeight()))
                 .zIndex(-1)
                 .with(new IrremovableComponent())
+                .at(0, 900)
                 .build();
     }
 /*
@@ -61,28 +63,28 @@ public class GameFactory implements EntityFactory {
     } */
 
        @Spawns("sonic")
-    public Player sonic(SpawnData data) {
-        PhysicsComponent physics = new PhysicsComponent();
-        physics.setBodyType(BodyType.DYNAMIC);  
-        physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
+        public Player sonic(SpawnData data) {
+            PhysicsComponent physics = new PhysicsComponent();
+            physics.setBodyType(BodyType.DYNAMIC);
+            physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
 
-        FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.setFriction(0.01f);  // Esto es lo mejor que encontre para reducir al minimo los empujes, pero no lo soluciona
-        fixtureDef.setRestitution(0.0f);
-        physics.setFixtureDef(fixtureDef);
+            FixtureDef fixtureDef = new FixtureDef();
+            fixtureDef.setFriction(1.0f);  // Esto es lo mejor que encontre para reducir al minimo los empujes, pero no lo soluciona
+            fixtureDef.setRestitution(0.0f);
+            physics.setFixtureDef(fixtureDef);
 
-        Player player = new Player();
+            Player player = new Player();
 
-        player.setType(EntityType.PLAYER);
-        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
-        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
+            player.setType(EntityType.PLAYER);
+            player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
+            player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
 
-        player.addComponent(physics);
-        player.addComponent(new CollidableComponent(true));
-        player.addComponent(new IrremovableComponent());
-        player.addComponent(new SonicComponent());
+            player.addComponent(physics);
+            player.addComponent(new CollidableComponent(true));
+            player.addComponent(new IrremovableComponent());
+            player.addComponent(new SonicComponent());
 
-        player.setPosition(data.getX(), data.getY());
+            player.setPosition(data.getX(), data.getY());
 
         return player;
     }
@@ -94,7 +96,7 @@ public class GameFactory implements EntityFactory {
         physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
 
         FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.setFriction(0.01f);  
+        fixtureDef.setFriction(1.0f);
         fixtureDef.setRestitution(0.0f);
         physics.setFixtureDef(fixtureDef);
 
@@ -121,7 +123,7 @@ public class GameFactory implements EntityFactory {
         physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
 
         FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.setFriction(0.01f);  
+        fixtureDef.setFriction(1.0f);
         fixtureDef.setRestitution(0.0f);
         physics.setFixtureDef(fixtureDef);
 
@@ -140,9 +142,6 @@ public class GameFactory implements EntityFactory {
 
         return player;
     }
-
-
-
 
     @Spawns("plataforma")
     public Entity newPlatform(SpawnData data) {
@@ -193,6 +192,19 @@ public class GameFactory implements EntityFactory {
                 .build();
         ring.getProperties().setValue("id", java.util.UUID.randomUUID().toString());
         return ring;
+    }
+
+    @Spawns("basura")
+    public Entity basura(SpawnData data) {
+        Entity basura = entityBuilder(data)
+                .type(EntityType.BASURA)
+                .bbox(new HitBox(new Point2D(0, 0), BoundingShape.circle(12)))
+                .with(new component.Items.TrashComponent())
+                .with(new CollidableComponent(true))
+                .with("trashId", UUID.randomUUID().toString())
+                .build();
+        basura.getProperties().setValue("id", java.util.UUID.randomUUID().toString());
+        return basura;
     }
 
 }

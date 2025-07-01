@@ -19,6 +19,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import component.GameFactory;
 import javafx.scene.text.Text;
@@ -36,7 +37,9 @@ public class ClientGameApp extends GameApplication {
     private String miID;
     private String personajePendiente = null;
     private int contadorAnillos = 0;
+    private int contadorBasura = 0;
     private Text textoAnillos;
+    private Text textoBasura;
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -50,6 +53,7 @@ public class ClientGameApp extends GameApplication {
     protected void initGame() {
         getGameWorld().addEntityFactory(new GameFactory());
         showCharacterSelectionMenu();
+        getGameScene().setBackgroundColor(Color.DARKGREEN);
     }
 
     private void showCharacterSelectionMenu() {
@@ -95,6 +99,8 @@ public class ClientGameApp extends GameApplication {
         var client = getNetService().newTCPClient("localhost", 55555);
         client.setOnConnected(conn -> {
             conexion = conn;
+            Bundle hola = new Bundle("Hola");
+            conn.send(hola);
             getExecutor().startAsyncFX(() -> onClient());
             System.out.println("Cliente conectado");
         });
@@ -135,9 +141,18 @@ public class ClientGameApp extends GameApplication {
                     double x = ((Number) bundle.get("x")).doubleValue();
                     double y = ((Number) bundle.get("y")).doubleValue();
                     String id = bundle.get("id");
-
                     Entity ring = spawn("ring", x, y);
                     ring.getProperties().setValue("id", id); // Guarda el id para identificarlo luego
+                    break;
+                }
+
+                case "crearBasura": {
+                    double x = ((Number) bundle.get("x")).doubleValue();
+                    double y = ((Number) bundle.get("y")).doubleValue();
+                    String id = bundle.get("id");
+
+                    Entity basura = spawn("basura", x, y);
+                    basura.getProperties().setValue("id", id); // Guarda el id para identificarlo luego
                     break;
                 }
 
@@ -158,6 +173,23 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
+                case "BasuraRecogida": {
+                    String trashId = bundle.get("trashId");
+
+                    getGameWorld().getEntitiesByType(GameFactory.EntityType.BASURA).stream()
+                        .filter(r -> trashId.equals(r.getProperties().getString("id")))
+                        .findFirst()
+                        .ifPresent(Entity::removeFromWorld);
+
+                    // Actualiza contador si el jugador es uno mismo
+                    String playerId = bundle.get("playerId");
+                    if (playerId.equals(miID)) {
+                        contadorBasura++;
+                        textoBasura.setText("basura: " + contadorBasura);
+                    }
+                    break;
+                }
+
 
                 case "Crear Personaje": {
                     String id = bundle.get("id");
@@ -170,7 +202,7 @@ public class ClientGameApp extends GameApplication {
                             Entity entidad = spawn(tipo, x, y);
                             player = (Player) entidad;
                             // mitad de la pantalla en x, y un poco mas abajo en y
-                            getGameScene().getViewport().bindToEntity(player, anchoPantalla/2.0, altoPantalla/1.75);
+                            getGameScene().getViewport().bindToEntity(player, anchoPantalla/2.0, altoPantalla/1.5);
                             getGameScene().getViewport().setLazy(true);
                         } else {
                             player.setX(x);
@@ -342,9 +374,14 @@ public class ClientGameApp extends GameApplication {
 
     @Override
     protected void initUI() {
-        textoAnillos = new Text("anillos: 0");
+        textoAnillos = new Text("Anillos: 0");
         textoAnillos.setStyle("-fx-font-size: 24px; -fx-fill: white;");
         addUINode(textoAnillos, 20, 20);
+        // contandor de basura recogida
+        textoBasura = new Text("Baura: 0");
+        textoBasura.setStyle("-fx-font-size: 24px; -fx-fill: white;");
+        addUINode(textoBasura, 20, 50);
+        
     }
 
     @Override
@@ -353,6 +390,14 @@ public class ClientGameApp extends GameApplication {
             String ringId = ring.getProperties().getString("id");
             Bundle recoger = new Bundle("RecogerAnillo");
             recoger.put("ringId", ringId);
+            recoger.put("playerId", miID);
+            conexion.send(recoger);
+        });
+
+        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.BASURA, (player, basura) -> {
+            String trashId = basura.getProperties().getString("id");
+            Bundle recoger = new Bundle("RecogerBasura");
+            recoger.put("trashId", trashId);
             recoger.put("playerId", miID);
             conexion.send(recoger);
         });

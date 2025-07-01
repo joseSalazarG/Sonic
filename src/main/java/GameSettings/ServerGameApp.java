@@ -5,6 +5,9 @@ import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.multiplayer.MultiplayerService;
 import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.app.GameApplication;
+
+import static GameSettings.Item.posicionesBasura;
+import static GameSettings.Item.posicionesRings;
 import static com.almasb.fxgl.dsl.FXGL.*;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
@@ -20,22 +23,15 @@ import java.util.Map;
 import java.util.UUID;
 
 public class ServerGameApp extends GameApplication implements Serializable{
-    private final int anchoPantalla = 1400;
-    private final int altoPantalla = 700;
+    private final int anchoPantalla = 800;
+    private final int altoPantalla = 500;
     private Connection<Bundle> conexion;
     private List<Connection> conexiones = new ArrayList<>();
     private List<Bundle> personajesExistentes = new ArrayList<>();
     private com.almasb.fxgl.net.Server<Bundle> server;
     private Map<String, Entity> anillos = new HashMap<>();
+    private Map<String, Entity> basura = new HashMap<>();
     private Player player;
-
-    List<int[]> posicionesRings = List.of(
-        new int[]{300, 1500},
-        new int[]{400, 1500},
-        new int[]{500, 1500},
-        new int[]{600, 1500}
-        // mas anillos 
-    );
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -66,7 +62,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
 
       private void Jugar(){
         getGameWorld().addEntityFactory(new GameFactory());
-        spawn("fondo");
+        //spawn("fondo");
         player = null;
         Level level = setLevelFromMap("test - copia.tmx");
         //player = spawn("player", 50, 150);
@@ -80,6 +76,13 @@ public class ServerGameApp extends GameApplication implements Serializable{
             Entity ring = spawn("ring", pos[0], pos[1]);
             ring.getProperties().setValue("id", ringId); // Guarda el id en las propiedades
             anillos.put(ringId, ring);
+        }
+
+        for (int[] pos : posicionesBasura) {
+            String trashId = UUID.randomUUID().toString();
+            Entity trash = spawn("basura", pos[0], pos[1]);
+            trash.getProperties().setValue("id", trashId); // Guarda el id en las propiedades
+            basura.put(trashId, trash);
         }
 
     }
@@ -165,15 +168,29 @@ public class ServerGameApp extends GameApplication implements Serializable{
 
 
                     // Envia todos los anillos a este cliente
+                    // Envia todos los anillos a este cliente
                     for (Map.Entry<String, Entity> entry : anillos.entrySet()) {
                         String id = entry.getKey();
                         Entity ring = entry.getValue();
-
+                        System.out.println("Enviando anillo)");
                         Bundle crearRing = new Bundle("crearRing");
                         crearRing.put("x", ring.getX());
                         crearRing.put("y", ring.getY());
                         crearRing.put("id", id);  // Enviar ID al cliente
                         conn.send(crearRing);
+                    }
+                    
+        
+
+                    for (Map.Entry<String, Entity> entry : basura.entrySet()) {
+                        String id = entry.getKey();
+                        Entity basura = entry.getValue();
+
+                        Bundle crearBasura = new Bundle("crearBasura");
+                        crearBasura.put("x", basura.getX());
+                        crearBasura.put("y", basura.getY());
+                        crearBasura.put("id", id);  // Enviar ID al cliente
+                        conn.send(crearBasura);
                     }
                     break;
 
@@ -193,6 +210,25 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     anilloRecogido.put("playerId", playerId);
                     anilloRecogido.put("ringId", ringId);
                     server.broadcast(anilloRecogido);
+                    break;
+                }
+
+                case "RecogerBasura": {
+                    String playerId = bundle.get("playerId");
+                    String trashId = bundle.get("trashId");
+
+                    // Elimina el anillo en el servidor
+                    Entity trash = basura.get(trashId);
+                    if (trash != null) {
+                        trash.removeFromWorld();
+                        basura.remove(trashId);
+                    } 
+
+                    // Notifica a todos los clientes
+                    Bundle basuraRecogida = new Bundle("BasuraRecogida");
+                    basuraRecogida.put("playerId", playerId);
+                    basuraRecogida.put("trashId", trashId);
+                    server.broadcast(basuraRecogida);
                     break;
                 }
             }

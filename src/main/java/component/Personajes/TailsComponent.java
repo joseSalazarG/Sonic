@@ -12,6 +12,7 @@ public class TailsComponent extends PlayerComponent {
     public TailsComponent() {
         Image image = image("Personajes/tails.png");
 
+        MAX_SALTOS = 300;
         velocidad_lateral_base -= 50; // se mueve ligeramenta mas lento que el jugador
 
         parado = new AnimationChannel(image, 4, 32, 42, Duration.seconds(1), 1, 1);
