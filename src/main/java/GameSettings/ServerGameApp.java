@@ -68,7 +68,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
         getGameWorld().addEntityFactory(new GameFactory());
         //spawn("fondo");
         player = null;
-        Level level = setLevelFromMap("test - copia.tmx");
+        Level level = setLevelFromMap("mapazo.tmx");
         //player = spawn("player", 50, 150);
 
         // Spawnea el robot enemigo

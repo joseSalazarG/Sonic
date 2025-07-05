@@ -106,7 +106,7 @@ public class ClientGameApp extends GameApplication {
 
     private void startNetworkAndGame() {
         spawn("fondo");
-        setLevelFromMap("test - copia.tmx");
+        setLevelFromMap("mapazo.tmx");
         var client = getNetService().newTCPClient("localhost", 55555);
         client.setOnConnected(conn -> {
             conexion = conn;
