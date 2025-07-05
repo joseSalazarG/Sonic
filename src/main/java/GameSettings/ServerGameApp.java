@@ -18,8 +18,10 @@ import component.GameLogic;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class ServerGameApp extends GameApplication implements Serializable{
@@ -32,6 +34,8 @@ public class ServerGameApp extends GameApplication implements Serializable{
     private Map<String, Entity> anillos = new HashMap<>();
     private Map<String, Entity> basura = new HashMap<>();
     private Player player;
+    private int totalBasura = 0;
+    private Set<Integer> eventosDisparados = new HashSet<>();
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -78,13 +82,37 @@ public class ServerGameApp extends GameApplication implements Serializable{
             anillos.put(ringId, ring);
         }
 
-        for (int[] pos : posicionesBasura) {
-            String trashId = UUID.randomUUID().toString();
-            Entity trash = spawn("basura", pos[0], pos[1]);
-            trash.getProperties().setValue("id", trashId); // Guarda el id en las propiedades
-            basura.put(trashId, trash);
-        }
+        String[] tiposDeBasura = { "basura", "papel", "caucho" };
 
+        for (int[] pos : posicionesBasura) {
+            String tipo = tiposDeBasura[(int)(Math.random() * tiposDeBasura.length)];
+            String id = UUID.randomUUID().toString();
+
+            Entity basuraEntidad = spawn(tipo, pos[0], pos[1]);
+            basuraEntidad.getProperties().setValue("id", id);
+            basuraEntidad.getProperties().setValue("tipo", tipo); // Guardamos el tipo
+
+            basura.put(id, basuraEntidad);
+        }
+        totalBasura = basura.size();
+
+    }
+
+    private void verificarEventoBasura() {
+        int cantidadRestante = basura.size();
+
+        if (cantidadRestante <= 7 && !eventosDisparados.contains(7)) {
+            eventosDisparados.add(7);
+
+            System.out.println("arbol hizo spawn");
+
+            Entity arbol = spawn("arbol", 400, 1200); 
+
+            Bundle spawnArbol = new Bundle("SpawnArbol");
+            spawnArbol.put("x", arbol.getX());
+            spawnArbol.put("y", arbol.getY());
+            server.broadcast(spawnArbol);
+        }
     }
 
     public void onServer(Connection<Bundle> connection) {
@@ -143,7 +171,6 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     }
                     break;
                 }
-
                 
                 case "Hola":
                     System.out.println("sonic se conecto");
@@ -153,8 +180,6 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     crearRobot.put("y", 480);
                     conn.send(crearRobot);
                     System.out.println("sonic se conecto");
-
-
 
                     for (Bundle personaje : personajesExistentes) {
                         Bundle copia = new Bundle("Crear Personaje");
@@ -166,8 +191,6 @@ public class ServerGameApp extends GameApplication implements Serializable{
                         conn.send(copia);
                     }
 
-
-                    // Envia todos los anillos a este cliente
                     // Envia todos los anillos a este cliente
                     for (Map.Entry<String, Entity> entry : anillos.entrySet()) {
                         String id = entry.getKey();
@@ -180,18 +203,23 @@ public class ServerGameApp extends GameApplication implements Serializable{
                         conn.send(crearRing);
                     }
                     
-        
-
                     for (Map.Entry<String, Entity> entry : basura.entrySet()) {
                         String id = entry.getKey();
-                        Entity basura = entry.getValue();
+                        Entity basuraEntidad = entry.getValue();
+                        String tipo = basuraEntidad.getProperties().getString("tipo");
 
-                        Bundle crearBasura = new Bundle("crearBasura");
-                        crearBasura.put("x", basura.getX());
-                        crearBasura.put("y", basura.getY());
-                        crearBasura.put("id", id);  // Enviar ID al cliente
-                        conn.send(crearBasura);
+                        Bundle crear = new Bundle("crearbasura");  // Un solo tipo de mensaje, tenia pensando enviarle con un + tipo, pero es mejor un solo case
+                        crear.put("x", basuraEntidad.getX());
+                        crear.put("y", basuraEntidad.getY());
+                        crear.put("id", id);
+                        crear.put("tipo", tipo);  // Esto es para que sepa que tipo es
+                        conn.send(crear);
                     }
+
+                    Bundle estadoBasura = new Bundle("EstadoBasuraGlobal");
+                    estadoBasura.put("total", totalBasura);
+                    estadoBasura.put("restante", basura.size());
+                    conn.send(estadoBasura);
                     break;
 
                 case "RecogerAnillo": {
@@ -216,19 +244,39 @@ public class ServerGameApp extends GameApplication implements Serializable{
                 case "RecogerBasura": {
                     String playerId = bundle.get("playerId");
                     String trashId = bundle.get("trashId");
+                    String tipoJugador = bundle.get("tipo");  // aseguramos minúsculas
 
-                    // Elimina el anillo en el servidor
                     Entity trash = basura.get(trashId);
                     if (trash != null) {
+                        String tipoBasura = trash.getProperties().getString("tipo").toLowerCase();
+
+                        System.out.println("Intentando recoger basura. Jugador tipo: " + tipoJugador + ", Basura tipo: " + tipoBasura);
+                        boolean puedeRecoger =
+                            tipoBasura.equals("basura") ||  // todos pueden recoger basura normal
+                            (tipoBasura.equals("caucho") && tipoJugador.equals("knuckles")) ||
+                            (tipoBasura.equals("papel") && tipoJugador.equals("tails"));
+
+                        if (!puedeRecoger) {
+                            System.out.println("No puede recoger basura: jugador " + tipoJugador + " con basura " + tipoBasura);
+                            break; 
+                        }
                         trash.removeFromWorld();
                         basura.remove(trashId);
-                    } 
+                        verificarEventoBasura();
 
-                    // Notifica a todos los clientes
-                    Bundle basuraRecogida = new Bundle("BasuraRecogida");
-                    basuraRecogida.put("playerId", playerId);
-                    basuraRecogida.put("trashId", trashId);
-                    server.broadcast(basuraRecogida);
+                        Bundle estadoActualizado = new Bundle("EstadoBasuraGlobal");
+                        estadoActualizado.put("total", totalBasura);
+                        estadoActualizado.put("restante", basura.size());
+                        server.broadcast(estadoActualizado);
+
+                        Bundle basuraRecogida = new Bundle("BasuraRecogida");
+                        basuraRecogida.put("playerId", playerId);
+                        basuraRecogida.put("trashId", trashId);
+                        server.broadcast(basuraRecogida);
+                    } else {
+                        System.out.println("Basura con id " + trashId + " no encontrada.");
+                    }
+
                     break;
                 }
             }

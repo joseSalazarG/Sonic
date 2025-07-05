@@ -21,4 +21,5 @@ public class TailsComponent extends PlayerComponent {
         texture = new AnimatedTexture(parado);
         texture.loop();
     }
+    
 }

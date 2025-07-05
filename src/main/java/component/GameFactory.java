@@ -20,6 +20,7 @@ import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
 import component.Items.TrashComponent;
 import javafx.geometry.Point2D;
+import javafx.scene.image.Image;
 
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.Spawns;
@@ -29,7 +30,7 @@ public class GameFactory implements EntityFactory {
     
 
     public enum EntityType {
-        PLAYER, FONDO, TIERRA, ROBOT_ENEMIGO, RING, AGUA, BASURA
+        PLAYER, FONDO, TIERRA, ROBOT_ENEMIGO, RING, AGUA, BASURA, ARBOL, PAPEL, CAUCHO
     }
 
     @Spawns("fondo")
@@ -205,6 +206,41 @@ public class GameFactory implements EntityFactory {
                 .build();
         basura.getProperties().setValue("id", java.util.UUID.randomUUID().toString());
         return basura;
+    }
+
+    @Spawns("papel")
+    public Entity papel(SpawnData data) {
+        Entity papel = entityBuilder(data)
+                .type(EntityType.PAPEL)
+                .bbox(new HitBox(new Point2D(0, 0), BoundingShape.circle(12)))
+                .with(new component.Items.PapelComponent())
+                .with(new CollidableComponent(true))
+                .with("trashId", UUID.randomUUID().toString())
+                .build();
+        papel.getProperties().setValue("id", java.util.UUID.randomUUID().toString());
+        return papel;
+    }
+
+    @Spawns("caucho")
+    public Entity caucho(SpawnData data) {
+        Entity caucho = entityBuilder(data)
+                .type(EntityType.CAUCHO)
+                .bbox(new HitBox(new Point2D(0, 0), BoundingShape.circle(12)))
+                .with(new component.Items.CauchoComponent())
+                .with(new CollidableComponent(true))
+                .with("trashId", UUID.randomUUID().toString())
+                .build();
+        caucho.getProperties().setValue("id", java.util.UUID.randomUUID().toString());
+        return caucho;
+    }
+
+    @Spawns("arbol")
+    public Entity newArbol(SpawnData data) {
+        return entityBuilder(data)
+                .type(EntityType.ARBOL)
+                .view("Escenario/arbol.png") 
+                .zIndex(1)
+                .build();
     }
 
 }

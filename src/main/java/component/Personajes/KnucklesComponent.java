@@ -21,5 +21,7 @@ public class KnucklesComponent extends PlayerComponent {// Knuckles moves faster
         texture = new AnimatedTexture(parado);
         texture.loop();
     }
+
+    
 }
 

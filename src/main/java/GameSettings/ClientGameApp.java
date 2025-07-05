@@ -10,7 +10,9 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.app.GameApplication;
 import static com.almasb.fxgl.dsl.FXGL.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.almasb.fxgl.app.GameSettings;
@@ -22,6 +24,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import component.GameFactory;
+import component.Personajes.KnucklesComponent;
+import component.Personajes.PlayerComponent;
+import component.Personajes.SonicComponent;
+import component.Personajes.TailsComponent;
 import javafx.scene.text.Text;
 import javafx.scene.Scene;
 
@@ -38,8 +44,13 @@ public class ClientGameApp extends GameApplication {
     private String personajePendiente = null;
     private int contadorAnillos = 0;
     private int contadorBasura = 0;
-    private Text textoAnillos;
     private Text textoBasura;
+    private int contadorPapel = 0;
+    private Text textoPapel;
+    private int contadorCaucho = 0;
+    private Text textoCaucho;
+    private Text textoAnillos;
+    private Text textoBasuraGlobal;
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -117,7 +128,7 @@ public class ClientGameApp extends GameApplication {
                     solicitar.put("tipo", personajePendiente);
                     conexion.send(solicitar);
 
-                    // Envia posición inicial para sincronizar servidor
+                    // Envia posicion inicial para sincronizar servidor
                     Bundle sync = new Bundle("SyncPos");
                     sync.put("id", miID);
                     sync.put("x", 50);
@@ -146,15 +157,19 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
-                case "crearBasura": {
+                case "crearbasura": {
                     double x = ((Number) bundle.get("x")).doubleValue();
                     double y = ((Number) bundle.get("y")).doubleValue();
                     String id = bundle.get("id");
+                    String tipo = bundle.get("tipo");  
 
-                    Entity basura = spawn("basura", x, y);
-                    basura.getProperties().setValue("id", id); // Guarda el id para identificarlo luego
+                    Entity basura = spawn(tipo, x, y);
+                    basura.getProperties().setValue("id", id);
+                    basura.getProperties().setValue("tipo", tipo);
+
                     break;
                 }
+
 
                 case "AnilloRecogido": {
                     String ringId = bundle.get("ringId");
@@ -175,21 +190,38 @@ public class ClientGameApp extends GameApplication {
 
                 case "BasuraRecogida": {
                     String trashId = bundle.get("trashId");
+                    List<Entity> basuras = new ArrayList<>();
+                    basuras.addAll(getGameWorld().getEntitiesByType(GameFactory.EntityType.BASURA));
+                    basuras.addAll(getGameWorld().getEntitiesByType(GameFactory.EntityType.PAPEL));
+                    basuras.addAll(getGameWorld().getEntitiesByType(GameFactory.EntityType.CAUCHO));
 
-                    getGameWorld().getEntitiesByType(GameFactory.EntityType.BASURA).stream()
+                    basuras.stream()
                         .filter(r -> trashId.equals(r.getProperties().getString("id")))
                         .findFirst()
-                        .ifPresent(Entity::removeFromWorld);
+                        .ifPresent(entity -> {
+                            String tipoBasura = entity.getProperties().getString("tipo");
+                            entity.removeFromWorld();
 
-                    // Actualiza contador si el jugador es uno mismo
-                    String playerId = bundle.get("playerId");
-                    if (playerId.equals(miID)) {
-                        contadorBasura++;
-                        textoBasura.setText("basura: " + contadorBasura);
-                    }
+                            if (bundle.get("playerId").equals(miID)) {
+                                switch (tipoBasura) {
+                                    case "papel":
+                                        contadorPapel++;
+                                        textoPapel.setText("Papel: " + contadorPapel);
+                                        break;
+                                    case "caucho":
+                                        contadorCaucho++;
+                                        textoCaucho.setText("Caucho: " + contadorCaucho);
+                                        break;
+                                    case "basura":
+                                        contadorBasura++;
+                                        textoBasura.setText("Basura: " + contadorBasura);
+                                        break;
+                                }
+                            }
+                        });
+
                     break;
                 }
-
 
                 case "Crear Personaje": {
                     String id = bundle.get("id");
@@ -275,6 +307,23 @@ public class ClientGameApp extends GameApplication {
                         double y = ((Number) bundle.get("y")).doubleValue();
                         robot.setPosition(x, y);
                     }
+                    break;
+                }
+
+                case "EstadoBasuraGlobal": {
+                    int total = bundle.get("total");
+                    int restante = bundle.get("restante");
+
+                    textoBasuraGlobal.setText("Basura restante: " + restante + "/" + total);
+                    break;
+                }
+
+                case "SpawnArbol": {
+                    double x = ((Number) bundle.get("x")).doubleValue();
+                    double y = ((Number) bundle.get("y")).doubleValue();
+
+                    spawn("arbol", x, y);
+                    System.out.println("¡Arbol spawnado por el servidor!");
                     break;
                 }
 
@@ -375,16 +424,28 @@ public class ClientGameApp extends GameApplication {
     @Override
     protected void initUI() {
         textoAnillos = new Text("Anillos: 0");
-        textoAnillos.setStyle("-fx-font-size: 24px; -fx-fill: white;");
+        textoAnillos.setStyle("-fx-font-size: 24px; -fx-fill: yellow;");
         addUINode(textoAnillos, 20, 20);
         // contandor de basura recogida
-        textoBasura = new Text("Baura: 0");
-        textoBasura.setStyle("-fx-font-size: 24px; -fx-fill: white;");
+        textoBasura = new Text("Basura: 0");
+        textoBasura.setStyle("-fx-font-size: 24px; -fx-fill: blue;");
         addUINode(textoBasura, 20, 50);
+
+        textoPapel = new Text("Papel 0: ");
+        textoPapel.setStyle("-fx-font-size: 24px; -fx-fill: white;");
+        addUINode(textoPapel, 20, 80);
+
+        textoCaucho = new Text("Caucho 0: ");
+        textoCaucho.setStyle("-fx-font-size: 24px; -fx-fill: red;");
+        addUINode(textoCaucho, 20, 110);
+
+        textoBasuraGlobal = new Text("Basura restante: ");
+        textoBasuraGlobal.setStyle("-fx-font-size: 24px; -fx-fill: orange;");
+        addUINode(textoBasuraGlobal, 1100, 20);
         
     }
 
-    @Override
+   @Override
     protected void initPhysics() {
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.RING, (player, ring) -> {
             String ringId = ring.getProperties().getString("id");
@@ -395,12 +456,40 @@ public class ClientGameApp extends GameApplication {
         });
 
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.BASURA, (player, basura) -> {
-            String trashId = basura.getProperties().getString("id");
-            Bundle recoger = new Bundle("RecogerBasura");
-            recoger.put("trashId", trashId);
-            recoger.put("playerId", miID);
-            conexion.send(recoger);
+            if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
+                recogerBasura(player, basura);
+            }
+        });
+
+        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.PAPEL, (player, papel) -> {
+            if (player.hasComponent(TailsComponent.class)) {
+                recogerBasura(player, papel);
+            }
+        });
+
+        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.CAUCHO, (player, caucho) -> {
+            if (player.hasComponent(KnucklesComponent.class)) {
+                recogerBasura(player, caucho);
+            }
         });
     }
 
+    private void recogerBasura(Entity player, Entity basuraEntidad) {
+        String trashId = basuraEntidad.getProperties().getString("id");
+
+        String tipo = "";
+        if (player.hasComponent(KnucklesComponent.class)) {
+            tipo = "knuckles";
+        } else if (player.hasComponent(TailsComponent.class)) {
+            tipo = "tails";
+        } else if (player.hasComponent(SonicComponent.class)) {
+            tipo = "sonic";
+        }
+
+        Bundle recoger = new Bundle("RecogerBasura");
+        recoger.put("trashId", trashId);
+        recoger.put("playerId", miID);
+        recoger.put("tipo", tipo);
+        conexion.send(recoger);
+    }
 }
