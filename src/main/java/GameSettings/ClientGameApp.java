@@ -137,39 +137,6 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
-                case "CrearRobotEnemigo": {
-                    Number xNum = bundle.get("x");
-                    Number yNum = bundle.get("y");
-                    double x = xNum.doubleValue();
-                    double y = yNum.doubleValue();
-                    if (getGameWorld().getEntitiesByType(component.GameFactory.EntityType.ROBOT_ENEMIGO).isEmpty()) {
-                        spawn("robotEnemigo", x, y);
-                    }
-                    break;
-                }
-
-                case "crearRing": {
-                    double x = ((Number) bundle.get("x")).doubleValue();
-                    double y = ((Number) bundle.get("y")).doubleValue();
-                    String id = bundle.get("id");
-                    Entity ring = spawn("ring", x, y);
-                    ring.getProperties().setValue("id", id); // Guarda el id para identificarlo luego
-                    break;
-                }
-
-                case "crearbasura": {
-                    double x = ((Number) bundle.get("x")).doubleValue();
-                    double y = ((Number) bundle.get("y")).doubleValue();
-                    String id = bundle.get("id");
-                    String tipo = bundle.get("tipo");  
-
-                    Entity basura = spawn(tipo, x, y);
-                    basura.getProperties().setValue("id", id);
-                    basura.getProperties().setValue("tipo", tipo);
-
-                    break;
-                }
-
 
                 case "AnilloRecogido": {
                     String ringId = bundle.get("ringId");
@@ -223,6 +190,48 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
+                case "CrearRobotEnemigo": {
+                   double x = ((Number) bundle.get("x")).doubleValue();
+                    double y = ((Number) bundle.get("y")).doubleValue();
+                    
+                    if (getGameWorld().getEntitiesByType(component.GameFactory.EntityType.ROBOT_ENEMIGO).isEmpty()) {
+                        spawn("robotEnemigo", x, y);
+                    }
+                    break;
+                }
+
+                case "CrearEggman": {
+                    double x = ((Number) bundle.get("x")).doubleValue();
+                    double y = ((Number) bundle.get("y")).doubleValue();
+
+                    if (getGameWorld().getEntitiesByType(GameFactory.EntityType.EGGMAN).isEmpty()) {
+                        spawn("eggman", x, y);
+                    }
+                    break;
+                }
+
+                case "crearRing": {
+                    double x = ((Number) bundle.get("x")).doubleValue();
+                    double y = ((Number) bundle.get("y")).doubleValue();
+                    String id = bundle.get("id");
+                    Entity ring = spawn("ring", x, y);
+                    ring.getProperties().setValue("id", id); // Guarda el id para identificarlo luego
+                    break;
+                }
+
+                case "crearbasura": {
+                    double x = ((Number) bundle.get("x")).doubleValue();
+                    double y = ((Number) bundle.get("y")).doubleValue();
+                    String id = bundle.get("id");
+                    String tipo = bundle.get("tipo");  
+
+                    Entity basura = spawn(tipo, x, y);
+                    basura.getProperties().setValue("id", id);
+                    basura.getProperties().setValue("tipo", tipo);
+
+                    break;
+                }
+
                 case "Crear Personaje": {
                     String id = bundle.get("id");
                     String tipo = bundle.get("tipo");
@@ -255,34 +264,6 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
-                case "Mover a la izquierda":
-                case "Mover a la derecha":
-                case "Saltar":
-                case "Detente": {
-                    String moveId = bundle.get("id");
-                    if (moveId.equals(miID)) {
-                        return; // Ignora tus propios mensajes
-                    }
-                    Player remotePlayer = personajeRemotos.get(moveId);
-                    if (remotePlayer == null) {
-                        return;
-                    }
-                    switch (bundle.getName()) {
-                        case "Mover a la izquierda":
-                            remotePlayer.moverIzquierda();
-                            break;
-                        case "Mover a la derecha":
-                            remotePlayer.moverDerecha();
-                            break;
-                        case "Saltar":
-                            remotePlayer.saltar();
-                            break;
-                        case "Detente":
-                            remotePlayer.detener();
-                            break;
-                    }
-                    break;
-                }
                 case "SyncPos": {
                     String syncId = bundle.get("id");
                     if (syncId.equals(miID)) {
@@ -310,6 +291,18 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
+                case "SyncEggmanPos": {
+                    var eggmans = getGameWorld().getEntitiesByType(GameFactory.EntityType.EGGMAN);
+                    if (!eggmans.isEmpty()) {
+                        Entity eggman = eggmans.get(0);
+                        double x = ((Number) bundle.get("x")).doubleValue();
+                        double y = ((Number) bundle.get("y")).doubleValue();
+                        eggman.setPosition(x, y);
+                    }
+                    break;
+                }
+
+
                 case "EstadoBasuraGlobal": {
                     int total = bundle.get("total");
                     int restante = bundle.get("restante");
@@ -324,6 +317,35 @@ public class ClientGameApp extends GameApplication {
 
                     spawn("arbol", x, y);
                     System.out.println("¡Arbol spawnado por el servidor!");
+                    break;
+                }
+
+                case "Mover a la izquierda":
+                case "Mover a la derecha":
+                case "Saltar":
+                case "Detente": {
+                    String moveId = bundle.get("id");
+                    if (moveId.equals(miID)) {
+                        return; // Ignora tus propios mensajes
+                    }
+                    Player remotePlayer = personajeRemotos.get(moveId);
+                    if (remotePlayer == null) {
+                        return;
+                    }
+                    switch (bundle.getName()) {
+                        case "Mover a la izquierda":
+                            remotePlayer.moverIzquierda();
+                            break;
+                        case "Mover a la derecha":
+                            remotePlayer.moverDerecha();
+                            break;
+                        case "Saltar":
+                            remotePlayer.saltar();
+                            break;
+                        case "Detente":
+                            remotePlayer.detener();
+                            break;
+                    }
                     break;
                 }
 

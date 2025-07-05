@@ -113,6 +113,18 @@ public class ServerGameApp extends GameApplication implements Serializable{
             spawnArbol.put("y", arbol.getY());
             server.broadcast(spawnArbol);
         }
+        else if (cantidadRestante <= 3 && !eventosDisparados.contains(3)) {
+            eventosDisparados.add(3);
+
+            System.out.println("eggman hizo spawn");
+
+            Entity eggman = spawn("eggman", 3900, 1250); // punto inicial
+
+            Bundle crearEggman = new Bundle("CrearEggman");
+            crearEggman.put("x", eggman.getX());
+            crearEggman.put("y", eggman.getY());
+            server.broadcast(crearEggman);
+        }
     }
 
     public void onServer(Connection<Bundle> connection) {
@@ -293,8 +305,16 @@ public class ServerGameApp extends GameApplication implements Serializable{
             Bundle posRobot = new Bundle("SyncRobotPos");
             posRobot.put("x", robot.getX());
             posRobot.put("y", robot.getY());
-
             server.broadcast(posRobot);
+        }
+
+        var eggmans = getGameWorld().getEntitiesByType(GameFactory.EntityType.EGGMAN); // definilo en tu GameFactory
+        if (!eggmans.isEmpty()) {
+            Entity eggman = eggmans.get(0);
+            Bundle posEggman = new Bundle("SyncEggmanPos");
+            posEggman.put("x", eggman.getX());
+            posEggman.put("y", eggman.getY());
+            server.broadcast(posEggman);
         }
     }
 }

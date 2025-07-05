@@ -18,6 +18,7 @@ import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
 import component.Personajes.KnucklesComponent;
 import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
+import component.Enemigos.EggmanComponent;
 import component.Items.TrashComponent;
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
@@ -30,7 +31,7 @@ public class GameFactory implements EntityFactory {
     
 
     public enum EntityType {
-        PLAYER, FONDO, TIERRA, ROBOT_ENEMIGO, RING, AGUA, BASURA, ARBOL, PAPEL, CAUCHO
+        PLAYER, FONDO, TIERRA, ROBOT_ENEMIGO, RING, AGUA, BASURA, ARBOL, PAPEL, CAUCHO, EGGMAN
     }
 
     @Spawns("fondo")
@@ -242,5 +243,24 @@ public class GameFactory implements EntityFactory {
                 .zIndex(1)
                 .build();
     }
+
+    @Spawns("eggman")
+    public Entity patrulla(SpawnData data) {
+        PhysicsComponent physics = new PhysicsComponent();
+        physics.setBodyType(BodyType.KINEMATIC);
+       FixtureDef fixture = new FixtureDef();
+        fixture.setFriction(1.0f);
+        fixture.setRestitution(0.0f);
+        physics.setFixtureDef(fixture);
+
+        return entityBuilder(data)
+                .type(EntityType.EGGMAN)
+                .bbox(new HitBox(BoundingShape.box(32, 32)))
+                .with(physics)
+                .with(new CollidableComponent(true))
+                .with(new EggmanComponent())
+                .build();
+    }
+
 
 }

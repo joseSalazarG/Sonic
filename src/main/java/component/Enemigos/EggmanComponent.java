@@ -11,19 +11,19 @@ import javafx.scene.image.ImageView;
 
 @Required(PhysicsComponent.class)
 
-public class RobotComponent extends Component {
+public class EggmanComponent extends Component {
 
     private PhysicsComponent physics;
 
     private double velocidad = 50;
     private double startX;
-    private double distancia = 100;
+    private double distancia = 300;
     private int direccion = 1;
 
     @Override
     public void onAdded() {
         startX = entity.getX();
-        Image image = image("Enemigos/enemigo.png");
+        Image image = image("Enemigos/eggman.png");
         ImageView view = new ImageView(image);
         view.setFitWidth(100);
         view.setFitHeight(100);
