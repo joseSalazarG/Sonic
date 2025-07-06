@@ -20,6 +20,7 @@ import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
 import component.Enemigos.EggmanComponent;
 import component.Items.TrashComponent;
+import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 
@@ -37,10 +38,10 @@ public class GameFactory implements EntityFactory {
     @Spawns("fondo")
     public Entity newBackground(SpawnData data) {
         return entityBuilder()
-                .view(new ScrollingBackgroundView(texture("background/forest.png").getImage(), getAppWidth(), getAppHeight()))
+                .view(new ScrollingBackgroundView(texture("background/background2.png").getImage(), getAppWidth(), getAppHeight(), Orientation.HORIZONTAL, 0.2))
                 .zIndex(-1)
                 .with(new IrremovableComponent())
-                .at(0, 900)
+                .at(0, 0)
                 .build();
     }
 /*

@@ -35,8 +35,8 @@ import javafx.scene.Scene;
 
 public class ClientGameApp extends GameApplication {
 
-    private final int anchoPantalla = 1400;
-    private final int altoPantalla = 700;
+    private final int anchoPantalla = 1000;
+    private final int altoPantalla = 600;
     private Connection<Bundle> conexion;
     private Map<String, Player> personajeRemotos = new HashMap<>();
     private Player player;
@@ -64,7 +64,7 @@ public class ClientGameApp extends GameApplication {
     protected void initGame() {
         getGameWorld().addEntityFactory(new GameFactory());
         showCharacterSelectionMenu();
-        getGameScene().setBackgroundColor(Color.DARKGREEN);
+        getGameScene().setBackgroundColor(Color.DARKBLUE);
     }
 
     private void showCharacterSelectionMenu() {
