@@ -9,6 +9,8 @@ import static com.almasb.fxgl.dsl.FXGL.image;
 
 public class TailsComponent extends PlayerComponent {
 
+    private int vidas = 3;
+
     public TailsComponent() {
         Image idle = image("Personajes/tails_Idle.png");
         Image salta_anim = image("Personajes/tails_Salta.png");
@@ -25,5 +27,17 @@ public class TailsComponent extends PlayerComponent {
     @Override
     public String getTipo() {
         return "tails";
+    }
+
+    public int getVidas() { 
+        return vidas; 
+    }
+
+    public void restarVida() {
+        vidas--; 
+    }
+
+    public boolean estaMuerto() {
+        return vidas <= 0; 
     }
 }

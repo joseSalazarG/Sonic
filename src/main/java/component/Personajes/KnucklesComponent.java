@@ -10,6 +10,7 @@ import static com.almasb.fxgl.dsl.FXGL.image;
 public class KnucklesComponent extends PlayerComponent {// Knuckles moves faster than the player
 
     AnimationChannel golpeando;
+    private int vidas = 3; // Number of lives for Knuckles
 
     public KnucklesComponent() {
         Image idle = image("Personajes/knuckles.png");
@@ -59,6 +60,18 @@ public class KnucklesComponent extends PlayerComponent {// Knuckles moves faster
         if (texture.getAnimationChannel() != saltando && texture.getAnimationChannel() != golpeando) {
             golpear();
         }
+    }
+
+    public int getVidas() { 
+        return vidas; 
+    }
+
+    public void restarVida() {
+        vidas--; 
+    }
+
+    public boolean estaMuerto() {
+        return vidas <= 0; 
     }
 }
 

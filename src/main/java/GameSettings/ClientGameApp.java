@@ -17,12 +17,15 @@ import java.util.Map;
 
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
+import com.almasb.fxgl.time.TimerAction;
+
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import component.GameFactory;
 import component.Personajes.KnucklesComponent;
 import component.Personajes.PlayerComponent;
@@ -51,8 +54,10 @@ public class ClientGameApp extends GameApplication {
     private Text textoCaucho;
     private Text textoAnillos;
     private Text textoBasuraGlobal;
+    private Text textoVidas;
     private boolean flag_Interactuar = false;
     private Entity stand_by;
+    private boolean invulnerable = false;
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -482,7 +487,11 @@ public class ClientGameApp extends GameApplication {
 
         textoBasuraGlobal = new Text("Basura restante: ");
         textoBasuraGlobal.setStyle("-fx-font-size: 24px; -fx-fill: orange;");
-        addUINode(textoBasuraGlobal, 1100, 20);
+        addUINode(textoBasuraGlobal, 700, 20);
+
+        textoVidas = new Text("Vidas: 3");
+        textoVidas.setStyle("-fx-font-size: 24px; -fx-fill: green;");
+        addUINode(textoVidas, 700, 50);
         
     }
 
@@ -525,6 +534,18 @@ public class ClientGameApp extends GameApplication {
                recogerBasura((Player) playerEntity, basura);
            }
        });
+
+        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.ROBOT_ENEMIGO, (player, robot) -> {
+            if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
+                perderVidas(player);
+            }
+        });
+
+        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.EGGMAN, (player, eggman) -> {
+            if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
+                perderVidas(player);
+            }
+        });
     }
 
     private void recogerBasura(Player player, Entity basuraEntidad) {
@@ -537,5 +558,75 @@ public class ClientGameApp extends GameApplication {
         recoger.put("playerId", miID);
         recoger.put("tipo", tipo);
         conexion.send(recoger);
+    }
+
+    private void perderVidas(Entity player) {
+        long ahora = System.currentTimeMillis();
+
+        if (invulnerable){
+            return;
+        }
+        
+        if (contadorAnillos > 0) {
+            contadorAnillos = 0;
+            textoAnillos.setText("Anillos: " + contadorAnillos);
+            activarInvulnerabilidad(3000, player);
+            return; 
+        }
+
+        if (player.hasComponent(SonicComponent.class)) {
+            SonicComponent sonic = player.getComponent(SonicComponent.class);
+            sonic.restarVida();
+            textoVidas.setText("Vidas: " + sonic.getVidas());
+            if (sonic.estaMuerto()) {
+                System.out.println("Sonic eliminado");
+                //player.removeFromWorld();
+                showGameOver();
+            } else {
+                activarInvulnerabilidad(3000, player);
+            }
+        } else if (player.hasComponent(TailsComponent.class)) {
+            TailsComponent tails = player.getComponent(TailsComponent.class);
+            tails.restarVida();
+            textoVidas.setText("Vidas: " + tails.getVidas());
+            if (tails.estaMuerto()) {
+                System.out.println("Tails eliminado");
+                //player.removeFromWorld();
+                showGameOver();
+            } else {
+                activarInvulnerabilidad(3000, player);
+            }
+        } else if (player.hasComponent(KnucklesComponent.class)) {
+            KnucklesComponent knuckles = player.getComponent(KnucklesComponent.class);
+            knuckles.restarVida();
+            textoVidas.setText("Vidas: " + knuckles.getVidas());
+            if (knuckles.estaMuerto()) {
+                System.out.println("Knuckles eliminado");
+                //player.removeFromWorld();
+                showGameOver();
+            } else {
+                activarInvulnerabilidad(3000, player);
+            }
+        }
+    }
+
+    private void showGameOver() {
+        getDialogService().showMessageBox("Game Over", () -> {
+            FXGL.getGameController().exit();
+        });
+    }
+
+    private void activarInvulnerabilidad(int milisegundos, Entity player) {
+        invulnerable = true;
+
+        TimerAction blinkAction = FXGL.getGameTimer().runAtInterval(() -> {
+            player.getViewComponent().setVisible(!player.getViewComponent().isVisible());
+        }, Duration.millis(200));
+
+        FXGL.getGameTimer().runOnceAfter(() -> {
+            invulnerable = false;
+            player.getViewComponent().setVisible(true); 
+            blinkAction.expire();
+        }, Duration.millis(milisegundos));
     }
 }
