@@ -51,6 +51,8 @@ public class ClientGameApp extends GameApplication {
     private Text textoCaucho;
     private Text textoAnillos;
     private Text textoBasuraGlobal;
+    private boolean flag_Interactuar = false;
+    private Entity stand_by;
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -441,6 +443,23 @@ public class ClientGameApp extends GameApplication {
                 conexion.send(sync);
             }
         }, KeyCode.W, VirtualButton.A);
+
+        getInput().addAction(new UserAction("Interactuar") {
+            @Override
+            protected void onActionBegin() {
+                if (player == null) return;
+                if (flag_Interactuar) { // Solo interactuar si se ha activado la bandera
+                    // Enviar mensaje al servidor para interactuar con el entorno
+                    Bundle bundle = new Bundle("Interactuar");
+                    bundle.put("id", miID);
+                    bundle.put("tipo", player.getTipo());
+                    conexion.send(bundle);
+                    player.interactuar();
+                    recogerBasura(player, stand_by); // Llama al metodo recogerBasura con la entidad stand_by
+                    // }
+                }
+            }
+        }, KeyCode.E);
     }
 
     @Override
@@ -469,6 +488,7 @@ public class ClientGameApp extends GameApplication {
 
    @Override
     protected void initPhysics() {
+
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.RING, (player, ring) -> {
             String ringId = ring.getProperties().getString("id");
             Bundle recoger = new Bundle("RecogerAnillo");
@@ -479,34 +499,38 @@ public class ClientGameApp extends GameApplication {
 
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.BASURA, (player, basura) -> {
             if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
-                recogerBasura(player, basura);
+                recogerBasura((Player)player, basura);
             }
         });
 
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.PAPEL, (player, papel) -> {
             if (player.hasComponent(TailsComponent.class)) {
-                recogerBasura(player, papel);
+                recogerBasura((Player)player, papel);
             }
         });
 
-        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.CAUCHO, (player, caucho) -> {
+        onCollisionBegin(GameFactory.EntityType.KNUCKLES, GameFactory.EntityType.CAUCHO, (player, caucho) -> {
             if (player.hasComponent(KnucklesComponent.class)) {
-                recogerBasura(player, caucho);
+                flag_Interactuar = true;
+                stand_by = caucho; // Guarda la entidad caucho para interactuar
             }
         });
+
+        onCollisionEnd(GameFactory.EntityType.PLAYER, GameFactory.EntityType.CAUCHO, (player, caucho) -> {
+            flag_Interactuar = false;
+        });
+
+       onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.BASURA, (playerEntity, basura) -> {
+           if (playerEntity.hasComponent(SonicComponent.class) || playerEntity.hasComponent(TailsComponent.class) || playerEntity.hasComponent(KnucklesComponent.class)) {
+               recogerBasura((Player) playerEntity, basura);
+           }
+       });
     }
 
-    private void recogerBasura(Entity player, Entity basuraEntidad) {
+    private void recogerBasura(Player player, Entity basuraEntidad) {
         String trashId = basuraEntidad.getProperties().getString("id");
 
-        String tipo = "";
-        if (player.hasComponent(KnucklesComponent.class)) {
-            tipo = "knuckles";
-        } else if (player.hasComponent(TailsComponent.class)) {
-            tipo = "tails";
-        } else if (player.hasComponent(SonicComponent.class)) {
-            tipo = "sonic";
-        }
+        String tipo = player.getTipo();
 
         Bundle recoger = new Bundle("RecogerBasura");
         recoger.put("trashId", trashId);

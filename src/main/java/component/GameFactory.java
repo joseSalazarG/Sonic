@@ -32,7 +32,7 @@ public class GameFactory implements EntityFactory {
     
 
     public enum EntityType {
-        PLAYER, FONDO, TIERRA, ROBOT_ENEMIGO, RING, AGUA, BASURA, ARBOL, PAPEL, CAUCHO, EGGMAN
+        PLAYER, FONDO, TIERRA, ROBOT_ENEMIGO, RING, AGUA, BASURA, ARBOL, PAPEL, CAUCHO, EGGMAN, KNUCKLES, SONIC, TAILS
     }
 
     @Spawns("fondo")
@@ -65,8 +65,8 @@ public class GameFactory implements EntityFactory {
                 .build();
     } */
 
-       @Spawns("sonic")
-        public Player sonic(SpawnData data) {
+    @Spawns("sonic")
+    public Player sonic(SpawnData data) {
             PhysicsComponent physics = new PhysicsComponent();
             physics.setBodyType(BodyType.DYNAMIC);
             physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
@@ -79,6 +79,7 @@ public class GameFactory implements EntityFactory {
             Player player = new Player();
 
             player.setType(EntityType.PLAYER);
+            player.setTipo("sonic");
             player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
             player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
 
@@ -106,6 +107,7 @@ public class GameFactory implements EntityFactory {
         Player player = new Player();
 
         player.setType(EntityType.PLAYER);
+        player.setTipo("tails");
         player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
         player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
 
@@ -133,8 +135,9 @@ public class GameFactory implements EntityFactory {
         Player player = new Player();
 
         player.setType(EntityType.PLAYER);
+        player.setTipo("knuckles");
         player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
-        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
+        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,24), BoundingShape.box(10, 17)));
 
         player.addComponent(physics);
         player.addComponent(new CollidableComponent(true));
@@ -262,6 +265,4 @@ public class GameFactory implements EntityFactory {
                 .with(new EggmanComponent())
                 .build();
     }
-
-
 }

@@ -158,7 +158,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     }
                     break;
 
-                 case "SolicitarCrearPersonaje": {
+                case "SolicitarCrearPersonaje": {
                     String id = bundle.get("id");
                     String tipo = bundle.get("tipo");
 
@@ -183,8 +183,13 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     }
                     break;
                 }
+
+                case "Interactuar": {
+                    String id = bundle.get("id");
+                    String tipo = bundle.get("tipo");
+                }
                 
-                case "Hola":
+                case "Hola": //NO LO BORRES :P
                     System.out.println("sonic se conecto");
                     // Envia el robot solo a este cliente
                     Bundle crearRobot = new Bundle("CrearRobotEnemigo");

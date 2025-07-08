@@ -11,16 +11,17 @@ public class SonicComponent extends PlayerComponent {
 
     public SonicComponent() {
         Image image = image("Personajes/sonic.png");
-        // Sonic tiene una velocidad lateral base más alta que el jugador
-        velocidad_lateral_base += 50; // se mueve más rápido que el jugador
-
-        // Definición de las animaciones para Sonic
+        velocidad_lateral_base = 400;
+        velocidad_vertical_base = 200;
+        // animaciones para Sonic
         parado = new AnimationChannel(image, 4, 32, 42, Duration.seconds(1), 1, 1);
         caminando = new AnimationChannel(image, 4, 32, 42, Duration.seconds(0.66), 0, 3);
-
         texture = new AnimatedTexture(parado);
         texture.loop();
     }
 
-    
+    @Override
+    public String getTipo() {
+        return "sonic";
+    }
 }

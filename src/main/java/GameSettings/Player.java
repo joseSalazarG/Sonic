@@ -14,6 +14,8 @@ import component.Personajes.TailsComponent;
  */
 public class Player extends Entity {
 
+    String tipo;
+
     public Player() {
         super();
     }
@@ -45,5 +47,19 @@ public class Player extends Entity {
     public Player bbox(HitBox hitBox) {
         this.getBoundingBoxComponent().addHitBox(hitBox);
         return this;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void interactuar() {
+        this.getComponentOptional(KnucklesComponent.class).ifPresent(KnucklesComponent::interactuar);
+        //this.getComponentOptional(TailsComponent.class).ifPresent(TailsComponent::interactuar);
+        //this.getComponentOptional(SonicComponent.class).ifPresent(SonicComponent::interactuar);
     }
 }

@@ -13,22 +13,13 @@ public abstract class PlayerComponent extends Component {
 
     protected PhysicsComponent physics;
     protected AnimatedTexture texture;
-    protected AnimationChannel parado, caminando;
+    protected AnimationChannel parado, caminando, saltando;
     protected int saltosPermitidos = 2;
-    protected int velocidad_lateral_base = 400; // Default horizontal speed
-    protected int velocidad_vertical_base = 250;
+    protected int velocidad_lateral_base; // Default horizontal speed
+    protected int velocidad_vertical_base;
     static int MAX_SALTOS = 2;
 
-    public PlayerComponent() {
-
-        Image image = image("player.png");
-
-        parado = new AnimationChannel(image, 4, 32, 42, Duration.seconds(1), 1, 1);
-        caminando = new AnimationChannel(image, 4, 32, 42, Duration.seconds(0.66), 0, 3);
-
-        texture = new AnimatedTexture(parado);
-        texture.loop();
-    }
+    public abstract String getTipo();
 
     @Override
     public void onAdded() {
@@ -44,9 +35,13 @@ public abstract class PlayerComponent extends Component {
 
     @Override
     public void onUpdate(double tpf) {
-        if (physics.isMovingX()) {
+        if (physics.isMovingX() && !physics.isMovingY()) {
             if (texture.getAnimationChannel() != caminando) {
                 texture.loopAnimationChannel(caminando);
+            }
+        } else if (physics.isMovingY()) {
+            if (texture.getAnimationChannel() != saltando) {
+                texture.loopAnimationChannel(saltando);
             }
         } else {
             if (texture.getAnimationChannel() != parado) {
