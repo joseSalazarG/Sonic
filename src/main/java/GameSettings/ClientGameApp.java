@@ -1,5 +1,7 @@
 package GameSettings;
 
+import com.almasb.fxgl.audio.Music;
+import com.almasb.fxgl.audio.Sound;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.input.UserAction;
@@ -9,12 +11,13 @@ import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.app.GameApplication;
 import static com.almasb.fxgl.dsl.FXGL.*;
+import static javafx.scene.text.Font.loadFont;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import javafx.scene.text.Font;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
 import com.almasb.fxgl.time.TimerAction;
@@ -469,36 +472,45 @@ public class ClientGameApp extends GameApplication {
 
     @Override
     protected void initUI() {
+        //fixme: no funciona la fuente personalizada
+        Font fuente = loadFont("SegaSonic.ttf", 14);
+
         textoAnillos = new Text("Anillos: 0");
         textoAnillos.setStyle("-fx-font-size: 24px; -fx-fill: yellow;");
+        textoAnillos.setFont(Font.font("Impact", 24));
         addUINode(textoAnillos, 20, 20);
         // contandor de basura recogida
         textoBasura = new Text("Basura: 0");
         textoBasura.setStyle("-fx-font-size: 24px; -fx-fill: blue;");
+        textoBasura.setFont(Font.font("Impact", 24));
         addUINode(textoBasura, 20, 50);
 
         textoPapel = new Text("Papel 0: ");
         textoPapel.setStyle("-fx-font-size: 24px; -fx-fill: white;");
+        textoPapel.setFont(Font.font("Impact", 24));
         addUINode(textoPapel, 20, 80);
 
         textoCaucho = new Text("Caucho 0: ");
         textoCaucho.setStyle("-fx-font-size: 24px; -fx-fill: red;");
+        textoCaucho.setFont(Font.font("Impact", 24));
         addUINode(textoCaucho, 20, 110);
 
         textoBasuraGlobal = new Text("Basura restante: ");
         textoBasuraGlobal.setStyle("-fx-font-size: 24px; -fx-fill: orange;");
+        textoBasuraGlobal.setFont(Font.font("Impact", 24));
         addUINode(textoBasuraGlobal, 700, 20);
 
         textoVidas = new Text("Vidas: 3");
         textoVidas.setStyle("-fx-font-size: 24px; -fx-fill: green;");
+        textoVidas.setFont(Font.font("Impact", 24));
         addUINode(textoVidas, 700, 50);
-        
     }
 
    @Override
     protected void initPhysics() {
 
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.RING, (player, ring) -> {
+            play("recoger.wav");
             String ringId = ring.getProperties().getString("id");
             Bundle recoger = new Bundle("RecogerAnillo");
             recoger.put("ringId", ringId);
@@ -563,6 +575,8 @@ public class ClientGameApp extends GameApplication {
     private void perderVidas(Entity player) {
         long ahora = System.currentTimeMillis();
 
+        FXGL.play("perder_anillos.wav");
+
         if (invulnerable){
             return;
         }
@@ -619,11 +633,11 @@ public class ClientGameApp extends GameApplication {
     private void activarInvulnerabilidad(int milisegundos, Entity player) {
         invulnerable = true;
 
-        TimerAction blinkAction = FXGL.getGameTimer().runAtInterval(() -> {
+        TimerAction blinkAction = getGameTimer().runAtInterval(() -> {
             player.getViewComponent().setVisible(!player.getViewComponent().isVisible());
         }, Duration.millis(200));
 
-        FXGL.getGameTimer().runOnceAfter(() -> {
+        getGameTimer().runOnceAfter(() -> {
             invulnerable = false;
             player.getViewComponent().setVisible(true); 
             blinkAction.expire();
