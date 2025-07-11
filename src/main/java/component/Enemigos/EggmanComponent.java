@@ -19,6 +19,7 @@ public class EggmanComponent extends Component {
     private double startX;
     private double distancia = 300;
     private int direccion = 1;
+    private int vidas = 10;
 
     @Override
     public void onAdded() {
@@ -40,6 +41,18 @@ public class EggmanComponent extends Component {
             direccion *= -1;
             startX = entity.getX(); // Reinicia el punto de referencia
         }
+    }
+
+    public int getVidas() { 
+        return vidas; 
+    }
+
+    public void restarVida() {
+        vidas--; 
+    }
+
+    public boolean estaMuerto() {
+        return vidas <= 0; 
     }
 }
 
