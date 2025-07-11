@@ -2,6 +2,7 @@ package GameSettings;
 
 import com.almasb.fxgl.audio.Music;
 import com.almasb.fxgl.audio.Sound;
+import com.almasb.fxgl.core.asset.AssetType;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.input.UserAction;
@@ -475,7 +476,7 @@ public class ClientGameApp extends GameApplication {
     @Override
     protected void initUI() {
         //fixme: no funciona la fuente personalizada
-        Font fuente = loadFont("SegaSonic.ttf", 14);
+        //Font fuente = getAssetLoader().load(AssetType.FONT,"SegaSonic.ttf");
 
         textoAnillos = new Text("Anillos: 0");
         textoAnillos.setStyle("-fx-font-size: 24px; -fx-fill: yellow;");
