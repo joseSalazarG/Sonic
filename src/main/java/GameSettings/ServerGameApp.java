@@ -6,8 +6,9 @@ import com.almasb.fxgl.multiplayer.MultiplayerService;
 import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.app.GameApplication;
 
-import static GameSettings.Item.posicionesBasura;
-import static GameSettings.Item.posicionesRings;
+import static GameSettings.Entities.posicionesBasura;
+import static GameSettings.Entities.posicionesRings;
+import static GameSettings.Entities.posicionesRobots;
 import static com.almasb.fxgl.dsl.FXGL.*;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
@@ -32,7 +33,8 @@ public class ServerGameApp extends GameApplication implements Serializable{
     private List<Bundle> personajesExistentes = new ArrayList<>();
     private com.almasb.fxgl.net.Server<Bundle> server;
     private Map<String, Entity> anillos = new HashMap<>();
-    private Map<String, Entity> basura = new HashMap<>();
+    private Map<String, Entity> basuras = new HashMap<>();
+    private Map<String, Entity> robots = new HashMap<>();
     private Player player;
     private int totalBasura = 0;
     private Set<Integer> eventosDisparados = new HashSet<>();
@@ -66,13 +68,8 @@ public class ServerGameApp extends GameApplication implements Serializable{
 
       private void Jugar(){
         getGameWorld().addEntityFactory(new GameFactory());
-        //spawn("fondo");
         player = null;
         Level level = setLevelFromMap("mapazo.tmx");
-        //player = spawn("player", 50, 150);
-
-        // Spawnea el robot enemigo
-        //spawn("robotEnemigo", 480, 480);
 
         // Spawnea todos los anillos en el servidor
         for (int[] pos : posicionesRings) {
@@ -81,6 +78,14 @@ public class ServerGameApp extends GameApplication implements Serializable{
             ring.getProperties().setValue("id", ringId); // Guarda el id en las propiedades
             anillos.put(ringId, ring);
         }
+
+        for (int[] pos : posicionesRobots) {
+            String robotId = UUID.randomUUID().toString();
+            Entity robot = spawn("robotEnemigo", pos[0], pos[1]);
+            robot.getProperties().setValue("id", robotId);
+            robots.put(robotId, robot);
+        }
+        
 
         String[] tiposDeBasura = { "basura", "papel", "caucho" };
 
@@ -92,14 +97,14 @@ public class ServerGameApp extends GameApplication implements Serializable{
             basuraEntidad.getProperties().setValue("id", id);
             basuraEntidad.getProperties().setValue("tipo", tipo); // Guardamos el tipo
 
-            basura.put(id, basuraEntidad);
+            basuras.put(id, basuraEntidad);
         }
-        totalBasura = basura.size();
+        totalBasura = basuras.size();
 
     }
 
     private void verificarEventoBasura() {
-        int cantidadRestante = basura.size();
+        int cantidadRestante = basuras.size();
 
         if (cantidadRestante <= 7 && !eventosDisparados.contains(7)) {
             eventosDisparados.add(7);
@@ -191,12 +196,6 @@ public class ServerGameApp extends GameApplication implements Serializable{
                 
                 case "Hola": //NO LO BORRES :P
                     System.out.println("sonic se conecto");
-                    // Envia el robot solo a este cliente
-                    Bundle crearRobot = new Bundle("CrearRobotEnemigo");
-                    crearRobot.put("x", 480);
-                    crearRobot.put("y", 480);
-                    conn.send(crearRobot);
-                    System.out.println("sonic se conecto");
 
                     for (Bundle personaje : personajesExistentes) {
                         Bundle copia = new Bundle("Crear Personaje");
@@ -220,7 +219,8 @@ public class ServerGameApp extends GameApplication implements Serializable{
                         conn.send(crearRing);
                     }
                     
-                    for (Map.Entry<String, Entity> entry : basura.entrySet()) {
+                    // Envia todas las basuras al cliente
+                    for (Map.Entry<String, Entity> entry : basuras.entrySet()) {
                         String id = entry.getKey();
                         Entity basuraEntidad = entry.getValue();
                         String tipo = basuraEntidad.getProperties().getString("tipo");
@@ -233,9 +233,21 @@ public class ServerGameApp extends GameApplication implements Serializable{
                         conn.send(crear);
                     }
 
+                    // Envia todos los robots al cliente
+                    for (Map.Entry<String, Entity> entry : robots.entrySet()) {
+                        String id = entry.getKey();
+                        Entity robot = entry.getValue();
+                        System.out.println("Enviando robot)");
+                        Bundle crearRobot = new Bundle("CrearRobotEnemigo");
+                        crearRobot.put("x", robot.getX());
+                        crearRobot.put("y", robot.getY());
+                        crearRobot.put("id", id);
+                        conn.send(crearRobot);
+                    }
+
                     Bundle estadoBasura = new Bundle("EstadoBasuraGlobal");
                     estadoBasura.put("total", totalBasura);
-                    estadoBasura.put("restante", basura.size());
+                    estadoBasura.put("restante", basuras.size());
                     conn.send(estadoBasura);
                     break;
 
@@ -258,12 +270,31 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     break;
                 }
 
+                case "EliminarRobot": {
+                    String playerId = bundle.get("playerId");
+                    String robotId = bundle.get("robotId");
+
+                    // Elimina el robot en el servidor
+                    Entity robot = robots.get(robotId);
+                    if (robot != null) {
+                        robot.removeFromWorld();
+                        robots.remove(robotId);
+                    }
+
+                    // Notifica a todos los clientes
+                    Bundle robotEliminado = new Bundle("RobotEliminado");
+                    robotEliminado.put("playerId", playerId);
+                    robotEliminado.put("robotId", robotId);
+                    server.broadcast(robotEliminado);
+                    break;
+                }
+
                 case "RecogerBasura": {
                     String playerId = bundle.get("playerId");
                     String trashId = bundle.get("trashId");
                     String tipoJugador = bundle.get("tipo");  // aseguramos minúsculas
 
-                    Entity trash = basura.get(trashId);
+                    Entity trash = basuras.get(trashId);
                     if (trash != null) {
                         String tipoBasura = trash.getProperties().getString("tipo").toLowerCase();
 
@@ -278,12 +309,12 @@ public class ServerGameApp extends GameApplication implements Serializable{
                             break; 
                         }
                         trash.removeFromWorld();
-                        basura.remove(trashId);
+                        basuras.remove(trashId);
                         verificarEventoBasura();
 
                         Bundle estadoActualizado = new Bundle("EstadoBasuraGlobal");
                         estadoActualizado.put("total", totalBasura);
-                        estadoActualizado.put("restante", basura.size());
+                        estadoActualizado.put("restante", basuras.size());
                         server.broadcast(estadoActualizado);
 
                         Bundle basuraRecogida = new Bundle("BasuraRecogida");

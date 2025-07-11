@@ -2,7 +2,7 @@ package GameSettings;
 
 import java.util.List;
 
-public class Item {
+public class Entities {
 
     static List<int[]> posicionesRings = List.of(
         new int[]{648, 425},
@@ -30,6 +30,16 @@ public class Item {
         new int[]{3100, 1500}
         
         // mas anillos 
+    );
+
+    static List<int[]> posicionesRobots = List.of(
+        new int[]{648, 200},
+        new int[]{748, 230},
+        new int[]{848, 260},
+        new int[]{948, 290},
+        new int[]{1048, 320},
+        new int[]{1148, 350}
+        // mas robots
     );
 
 }

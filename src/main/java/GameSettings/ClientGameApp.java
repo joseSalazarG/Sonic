@@ -24,6 +24,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.text.Font;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
+import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.time.TimerAction;
 
 import javafx.geometry.Pos;
@@ -34,6 +35,8 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import component.GameFactory;
+import component.Enemigos.EggmanComponent;
+import component.Enemigos.RobotComponent;
 import component.Personajes.KnucklesComponent;
 import component.Personajes.PlayerComponent;
 import component.Personajes.SonicComponent;
@@ -169,6 +172,17 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
+                case "RobotEliminado": {
+                    String robotId = bundle.get("robotId");
+
+                    getGameWorld().getEntitiesByType(GameFactory.EntityType.ROBOT_ENEMIGO).stream()
+                        .filter(r -> robotId.equals(r.getProperties().getString("id")))
+                        .findFirst()
+                        .ifPresent(Entity::removeFromWorld);
+
+                    break;
+                }
+
                 case "BasuraRecogida": {
                     String trashId = bundle.get("trashId");
                     List<Entity> basuras = new ArrayList<>();
@@ -205,12 +219,11 @@ public class ClientGameApp extends GameApplication {
                 }
 
                 case "CrearRobotEnemigo": {
-                   double x = ((Number) bundle.get("x")).doubleValue();
+                    double x = ((Number) bundle.get("x")).doubleValue();
                     double y = ((Number) bundle.get("y")).doubleValue();
-                    
-                    if (getGameWorld().getEntitiesByType(component.GameFactory.EntityType.ROBOT_ENEMIGO).isEmpty()) {
-                        spawn("robotEnemigo", x, y);
-                    }
+                    String id = bundle.get("id");
+                    Entity robot = spawn("robotEnemigo", x, y);
+                    robot.getProperties().setValue("id", id); // Guarda el id para identificarlo luego
                     break;
                 }
 
@@ -530,15 +543,50 @@ public class ClientGameApp extends GameApplication {
        });
 
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.ROBOT_ENEMIGO, (player, robot) -> {
+            double alturaPlayer = player.getHeight();
+            double alturaRobot = robot.getHeight();
+
+            double bottomPlayer = player.getY() + alturaPlayer;
+            double topRobot = robot.getY();
+
+            boolean golpeDesdeArriba = bottomPlayer <= topRobot + 10;
+
+            if (golpeDesdeArriba) {
+                String robotId = robot.getProperties().getString("id");
+                Bundle eliminar = new Bundle("EliminarRobot");
+                eliminar.put("robotId", robotId);
+                eliminar.put("playerId", miID);
+                conexion.send(eliminar);
+
+                if (player.hasComponent(PhysicsComponent.class)) {
+                    player.getComponent(PhysicsComponent.class).setVelocityY(-300);
+                }
+
+            }  else if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
+                perderVidas();
             if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
                 perderVidas();
             }
         });
 
+
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.EGGMAN, (player, eggman) -> {
-            if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
+            double alturaPlayer = player.getHeight();
+            double alturaEggman = eggman.getHeight();
+
+            double bottomPlayer = player.getY() + alturaPlayer;
+            double topEggman = eggman.getY();
+
+            boolean golpeDesdeArriba = bottomPlayer <= topEggman + 10;
+
+            if (golpeDesdeArriba) {
+                perderVidas(eggman);
+
+                if (player.hasComponent(PhysicsComponent.class)) {
+                    player.getComponent(PhysicsComponent.class).setVelocityY(-300);
+                }
+            } else {
                 perderVidas();
-            }
         });
     }
 

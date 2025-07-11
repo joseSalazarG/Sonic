@@ -89,6 +89,7 @@ public class GameFactory implements EntityFactory {
             player.addComponent(new SonicComponent());
 
             player.setPosition(data.getX(), data.getY());
+            player.getProperties().setValue("altura", 32.0);
 
         return player;
     }
@@ -117,6 +118,7 @@ public class GameFactory implements EntityFactory {
         player.addComponent(new TailsComponent());
 
         player.setPosition(data.getX(), data.getY());
+        player.getProperties().setValue("altura", 32.0);
 
         return player;
     }
@@ -145,6 +147,7 @@ public class GameFactory implements EntityFactory {
         player.addComponent(new KnucklesComponent());
 
         player.setPosition(data.getX(), data.getY());
+        player.getProperties().setValue("altura", 32.0);
 
         return player;
     }
@@ -170,20 +173,6 @@ public class GameFactory implements EntityFactory {
                 .type(EntityType.AGUA)
                 .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width"), data.<Integer>get("height"))))
                 .with(physics)
-                .build();
-    }
-
-    @Spawns("robotEnemigo")
-    public Entity robotEnemigo(SpawnData data) {
-        PhysicsComponent physics = new PhysicsComponent();
-        physics.setBodyType(BodyType.DYNAMIC);
-
-        return entityBuilder(data)
-                .type(EntityType.ROBOT_ENEMIGO)
-                .bbox(new HitBox(new Point2D(0, 0), BoundingShape.circle(24))) // radio 32 centrada
-                .with(physics)
-                .with(new CollidableComponent(true))
-                .with(new component.Enemigos.RobotComponent())
                 .build();
     }
 
@@ -248,21 +237,42 @@ public class GameFactory implements EntityFactory {
                 .build();
     }
 
+    @Spawns("robotEnemigo")
+    public Entity robotEnemigo(SpawnData data) {
+        PhysicsComponent physics = new PhysicsComponent();
+        physics.setBodyType(BodyType.DYNAMIC);
+
+        Entity robot = entityBuilder(data)
+                .type(EntityType.ROBOT_ENEMIGO)
+                .bbox(new HitBox(new Point2D(10, 10), BoundingShape.circle(35))) // radio 32 centrada
+                .with(physics)
+                .with(new CollidableComponent(true))
+                .with(new component.Enemigos.RobotComponent())
+                .with("altura", 100.0)
+                .build(); 
+
+        robot.getProperties().setValue("id", java.util.UUID.randomUUID().toString()); 
+
+        return robot;
+    }
+
     @Spawns("eggman")
     public Entity patrulla(SpawnData data) {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setBodyType(BodyType.KINEMATIC);
-       FixtureDef fixture = new FixtureDef();
+
+        FixtureDef fixture = new FixtureDef();
         fixture.setFriction(1.0f);
         fixture.setRestitution(0.0f);
         physics.setFixtureDef(fixture);
 
         return entityBuilder(data)
                 .type(EntityType.EGGMAN)
-                .bbox(new HitBox(BoundingShape.box(32, 32)))
+                .bbox(new HitBox(new Point2D(10, 10), BoundingShape.circle(40)))
                 .with(physics)
                 .with(new CollidableComponent(true))
                 .with(new EggmanComponent())
+                .with("altura", 100.0)     
                 .build();
     }
 }
