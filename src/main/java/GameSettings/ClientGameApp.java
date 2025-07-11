@@ -79,7 +79,7 @@ public class ClientGameApp extends GameApplication {
         showCharacterSelectionMenu();
         getGameScene().setBackgroundColor(Color.DARKBLUE);
         Music music = getAssetLoader().loadMusic("OST.mp3");
-        getAudioPlayer().loopMusic(music);
+        //getAudioPlayer().loopMusic(music);
         gameLogic = new GameLogic();
         gameLogic.init();
     }
@@ -542,33 +542,26 @@ public class ClientGameApp extends GameApplication {
            }
        });
 
-        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.ROBOT_ENEMIGO, (player, robot) -> {
-            double alturaPlayer = player.getHeight();
-            double alturaRobot = robot.getHeight();
+       onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.ROBOT_ENEMIGO, (player, robot) -> {
+           double alturaPlayer = player.getHeight();
+           double alturaRobot = robot.getHeight();
 
-            double bottomPlayer = player.getY() + alturaPlayer;
-            double topRobot = robot.getY();
+           double bottomPlayer = player.getY() + alturaPlayer;
+           double topRobot = robot.getY();
 
-            boolean golpeDesdeArriba = bottomPlayer <= topRobot + 10;
+           boolean golpeDesdeArriba = bottomPlayer <= topRobot + 10;
 
-            if (golpeDesdeArriba) {
-                String robotId = robot.getProperties().getString("id");
-                Bundle eliminar = new Bundle("EliminarRobot");
-                eliminar.put("robotId", robotId);
-                eliminar.put("playerId", miID);
-                conexion.send(eliminar);
-
-                if (player.hasComponent(PhysicsComponent.class)) {
-                    player.getComponent(PhysicsComponent.class).setVelocityY(-300);
-                }
-
-            }  else if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
-                perderVidas();
-            if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
-                perderVidas();
-            }
-        });
-
+           if (golpeDesdeArriba) {
+               String robotId = robot.getProperties().getString("id");
+               Bundle eliminar = new Bundle("EliminarRobot");
+               eliminar.put("robotId", robotId);
+               eliminar.put("playerId", miID);
+               conexion.send(eliminar);
+               player.getComponent(PhysicsComponent.class).setVelocityY(-300);
+           } else {
+               perderVidas();
+           }
+       });
 
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.EGGMAN, (player, eggman) -> {
             double alturaPlayer = player.getHeight();
@@ -580,13 +573,15 @@ public class ClientGameApp extends GameApplication {
             boolean golpeDesdeArriba = bottomPlayer <= topEggman + 10;
 
             if (golpeDesdeArriba) {
-                perderVidas(eggman);
+                //todo: enviar mensaje al servidor para quitarle vidas al eggman
+                //perderVidas(eggman);
 
                 if (player.hasComponent(PhysicsComponent.class)) {
                     player.getComponent(PhysicsComponent.class).setVelocityY(-300);
                 }
             } else {
                 perderVidas();
+            }
         });
     }
 
@@ -605,25 +600,25 @@ public class ClientGameApp extends GameApplication {
     private void perderVidas() {
         long ahora = System.currentTimeMillis();
 
-        FXGL.play("perder_anillos.wav");
-
         if (invulnerable){
             return;
         }
         
         if (contadorAnillos > 0) {
+            play("perder_anillos.wav");
             contadorAnillos = 0;
             gameLogic.cambiarTextoAnillos("Anillos: " + contadorAnillos);
-            activarInvulnerabilidad(3000, player);
+            activarInvencibilidad(3000, player);
             return; 
         }
 
+        play("muerte.wav");
         player.restarVida();
         gameLogic.cambiarTextoVidas("Vidas: " + player.getVidas());
         if (player.estaMuerto()) {
             showGameOver();
         } else {
-            activarInvulnerabilidad(3000, player);
+            activarInvencibilidad(3000, player);
         }
     }
 
@@ -633,7 +628,7 @@ public class ClientGameApp extends GameApplication {
         });
     }
 
-    private void activarInvulnerabilidad(int milisegundos, Entity player) {
+    private void activarInvencibilidad(int milisegundos, Entity player) {
         invulnerable = true;
 
         TimerAction blinkAction = getGameTimer().runAtInterval(() -> {

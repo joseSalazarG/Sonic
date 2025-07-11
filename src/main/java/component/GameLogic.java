@@ -126,4 +126,6 @@ public class GameLogic extends Component implements Serializable {
         textoBasura.setText("Basura: 0");
         textoPapel.setText("Papel: 0");
     }
+
+
 }
