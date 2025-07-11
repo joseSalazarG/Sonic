@@ -9,8 +9,6 @@ import static com.almasb.fxgl.dsl.FXGL.image;
 
 public class SonicComponent extends PlayerComponent {
 
-    private int vidas = 3;
-
     public SonicComponent() {
         Image image = image("Personajes/sonic.png");
         velocidad_lateral_base = 400;
@@ -26,17 +24,5 @@ public class SonicComponent extends PlayerComponent {
     @Override
     public String getTipo() {
         return "sonic";
-    }
-
-    public int getVidas() { 
-        return vidas; 
-    }
-
-    public void restarVida() {
-        vidas--; 
-    }
-
-    public boolean estaMuerto() {
-        return vidas <= 0; 
     }
 }

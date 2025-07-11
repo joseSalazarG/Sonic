@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import component.GameLogic;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.text.Font;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
@@ -37,6 +40,7 @@ import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
 import javafx.scene.text.Text;
 import javafx.scene.Scene;
+import javafx.scene.effect.ColorAdjust;
 
 // TODO arreglar empujes entre entidades para mejor sincronizacion
 
@@ -51,17 +55,12 @@ public class ClientGameApp extends GameApplication {
     private String personajePendiente = null;
     private int contadorAnillos = 0;
     private int contadorBasura = 0;
-    private Text textoBasura;
     private int contadorPapel = 0;
-    private Text textoPapel;
     private int contadorCaucho = 0;
-    private Text textoCaucho;
-    private Text textoAnillos;
-    private Text textoBasuraGlobal;
-    private Text textoVidas;
     private boolean flag_Interactuar = false;
     private Entity stand_by;
     private boolean invulnerable = false;
+    public GameLogic gameLogic;
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -78,6 +77,8 @@ public class ClientGameApp extends GameApplication {
         getGameScene().setBackgroundColor(Color.DARKBLUE);
         Music music = getAssetLoader().loadMusic("OST.mp3");
         getAudioPlayer().loopMusic(music);
+        gameLogic = new GameLogic();
+        gameLogic.init();
     }
 
     private void showCharacterSelectionMenu() {
@@ -163,7 +164,7 @@ public class ClientGameApp extends GameApplication {
                     String playerId = bundle.get("playerId");
                     if (playerId.equals(miID)) {
                         contadorAnillos++;
-                        textoAnillos.setText("anillos: " + contadorAnillos);
+                        gameLogic.cambiarTextoAnillos("anillos: " + contadorAnillos);
                     }
                     break;
                 }
@@ -186,15 +187,15 @@ public class ClientGameApp extends GameApplication {
                                 switch (tipoBasura) {
                                     case "papel":
                                         contadorPapel++;
-                                        textoPapel.setText("Papel: " + contadorPapel);
+                                        gameLogic.cambiarTextoPapel("Papel: " + contadorPapel);
                                         break;
                                     case "caucho":
                                         contadorCaucho++;
-                                        textoCaucho.setText("Caucho: " + contadorCaucho);
+                                        gameLogic.cambiarTextoCaucho("Caucho: " + contadorCaucho);
                                         break;
                                     case "basura":
                                         contadorBasura++;
-                                        textoBasura.setText("Basura: " + contadorBasura);
+                                        gameLogic.cambiarTextoBasura("Basura: " + contadorBasura);
                                         break;
                                 }
                             }
@@ -320,7 +321,9 @@ public class ClientGameApp extends GameApplication {
                     int total = bundle.get("total");
                     int restante = bundle.get("restante");
 
-                    textoBasuraGlobal.setText("Basura restante: " + restante + "/" + total);
+                    GameLogic.agregarBarra((float) restante / total);
+                    GameLogic.filtroColor((float) restante / total); // Cambia el tono
+                    gameLogic.cambiarTextoBasuraGlobal("Basura restante: " + restante + "/" + total);
                     break;
                 }
 
@@ -477,36 +480,12 @@ public class ClientGameApp extends GameApplication {
     protected void initUI() {
         //fixme: no funciona la fuente personalizada
         //Font fuente = getAssetLoader().load(AssetType.FONT,"SegaSonic.ttf");
-
-        textoAnillos = new Text("Anillos: 0");
-        textoAnillos.setStyle("-fx-font-size: 24px; -fx-fill: yellow;");
-        textoAnillos.setFont(Font.font("Impact", 24));
-        addUINode(textoAnillos, 20, 20);
-        // contandor de basura recogida
-        textoBasura = new Text("Basura: 0");
-        textoBasura.setStyle("-fx-font-size: 24px; -fx-fill: blue;");
-        textoBasura.setFont(Font.font("Impact", 24));
-        addUINode(textoBasura, 20, 50);
-
-        textoPapel = new Text("Papel 0: ");
-        textoPapel.setStyle("-fx-font-size: 24px; -fx-fill: white;");
-        textoPapel.setFont(Font.font("Impact", 24));
-        addUINode(textoPapel, 20, 80);
-
-        textoCaucho = new Text("Caucho 0: ");
-        textoCaucho.setStyle("-fx-font-size: 24px; -fx-fill: red;");
-        textoCaucho.setFont(Font.font("Impact", 24));
-        addUINode(textoCaucho, 20, 110);
-
-        textoBasuraGlobal = new Text("Basura restante: ");
-        textoBasuraGlobal.setStyle("-fx-font-size: 24px; -fx-fill: orange;");
-        textoBasuraGlobal.setFont(Font.font("Impact", 24));
-        addUINode(textoBasuraGlobal, 700, 20);
-
-        textoVidas = new Text("Vidas: 3");
-        textoVidas.setStyle("-fx-font-size: 24px; -fx-fill: green;");
-        textoVidas.setFont(Font.font("Impact", 24));
-        addUINode(textoVidas, 700, 50);
+        //GameLogic.agregarTexto("Anillos: 0", "yellow", 24, 20, 20);
+        //GameLogic.agregarTexto("Basura: 0", "blue", 24, 20, 50);
+        //GameLogic.agregarTexto("Papel: 0", "white", 24, 20, 80);
+        //GameLogic.agregarTexto("Caucho: 0", "red", 24, 20, 110);
+        //GameLogic.agregarTexto("Basura restante: 0", "orange", 24, 700, 20);
+        //GameLogic.agregarTexto("Vidas: 3", "green", 24, 700, 50);
     }
 
    @Override
@@ -552,13 +531,13 @@ public class ClientGameApp extends GameApplication {
 
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.ROBOT_ENEMIGO, (player, robot) -> {
             if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
-                perderVidas(player);
+                perderVidas();
             }
         });
 
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.EGGMAN, (player, eggman) -> {
             if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
-                perderVidas(player);
+                perderVidas();
             }
         });
     }
@@ -575,7 +554,7 @@ public class ClientGameApp extends GameApplication {
         conexion.send(recoger);
     }
 
-    private void perderVidas(Entity player) {
+    private void perderVidas() {
         long ahora = System.currentTimeMillis();
 
         FXGL.play("perder_anillos.wav");
@@ -586,44 +565,17 @@ public class ClientGameApp extends GameApplication {
         
         if (contadorAnillos > 0) {
             contadorAnillos = 0;
-            textoAnillos.setText("Anillos: " + contadorAnillos);
+            gameLogic.cambiarTextoAnillos("Anillos: " + contadorAnillos);
             activarInvulnerabilidad(3000, player);
             return; 
         }
 
-        if (player.hasComponent(SonicComponent.class)) {
-            SonicComponent sonic = player.getComponent(SonicComponent.class);
-            sonic.restarVida();
-            textoVidas.setText("Vidas: " + sonic.getVidas());
-            if (sonic.estaMuerto()) {
-                System.out.println("Sonic eliminado");
-                //player.removeFromWorld();
-                showGameOver();
-            } else {
-                activarInvulnerabilidad(3000, player);
-            }
-        } else if (player.hasComponent(TailsComponent.class)) {
-            TailsComponent tails = player.getComponent(TailsComponent.class);
-            tails.restarVida();
-            textoVidas.setText("Vidas: " + tails.getVidas());
-            if (tails.estaMuerto()) {
-                System.out.println("Tails eliminado");
-                //player.removeFromWorld();
-                showGameOver();
-            } else {
-                activarInvulnerabilidad(3000, player);
-            }
-        } else if (player.hasComponent(KnucklesComponent.class)) {
-            KnucklesComponent knuckles = player.getComponent(KnucklesComponent.class);
-            knuckles.restarVida();
-            textoVidas.setText("Vidas: " + knuckles.getVidas());
-            if (knuckles.estaMuerto()) {
-                System.out.println("Knuckles eliminado");
-                //player.removeFromWorld();
-                showGameOver();
-            } else {
-                activarInvulnerabilidad(3000, player);
-            }
+        player.restarVida();
+        gameLogic.cambiarTextoVidas("Vidas: " + player.getVidas());
+        if (player.estaMuerto()) {
+            showGameOver();
+        } else {
+            activarInvulnerabilidad(3000, player);
         }
     }
 

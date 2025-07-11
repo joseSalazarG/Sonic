@@ -15,6 +15,7 @@ import component.Personajes.TailsComponent;
 public class Player extends Entity {
 
     String tipo;
+    private int vidas = 3;
 
     public Player() {
         super();
@@ -61,5 +62,17 @@ public class Player extends Entity {
         this.getComponentOptional(KnucklesComponent.class).ifPresent(KnucklesComponent::interactuar);
         //this.getComponentOptional(TailsComponent.class).ifPresent(TailsComponent::interactuar);
         //this.getComponentOptional(SonicComponent.class).ifPresent(SonicComponent::interactuar);
+    }
+
+    public int getVidas() {
+        return vidas;
+    }
+
+    public void restarVida() {
+        vidas--;
+    }
+
+    public boolean estaMuerto() {
+        return vidas <= 0;
     }
 }
