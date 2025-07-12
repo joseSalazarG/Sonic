@@ -19,15 +19,15 @@ public class Entities {
         new int[]{620, 650},
         new int[]{640, 650},
         new int[]{660, 650},
-        new int[]{2300, 1500},
-        new int[]{2400, 1500},
-        new int[]{2500, 1500},
-        new int[]{2600, 1500},
-        new int[]{2700, 1500},
-        new int[]{2800, 1500},
-        new int[]{2900, 1500},
-        new int[]{3000, 1500},
-        new int[]{3100, 1500}
+        new int[]{1300, 320},
+        new int[]{1310, 320},
+        new int[]{1320, 320},
+        new int[]{1330, 320},
+        new int[]{1340, 320},
+        new int[]{1350, 320},
+        new int[]{1360, 320},
+        new int[]{1370, 320},
+        new int[]{1380, 320}
         
         // mas anillos 
     );
