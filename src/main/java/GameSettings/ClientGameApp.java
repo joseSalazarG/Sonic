@@ -423,7 +423,6 @@ public class ClientGameApp extends GameApplication {
             @Override
             protected void onActionBegin() {
                 if (player == null) return;
-                play("salto.wav");
                 Bundle bundle = new Bundle("Saltar");
                 bundle.put("id", player.getId());
                 conexion.send(bundle);
