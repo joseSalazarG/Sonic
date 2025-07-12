@@ -103,7 +103,12 @@ public class Player extends Entity {
     }
 
     public void transformarSuperSonic() {
-        this.getComponentOptional(SonicComponent.class).ifPresent(SonicComponent::transformarSuperSonic);
+        if (!isInvencible()) {
+            this.getComponentOptional(SonicComponent.class).ifPresent(SonicComponent::transformarSuperSonic);
+        } else {
+            this.getComponentOptional(SonicComponent.class).ifPresent(SonicComponent::destransformar);
+        }
+        setInvencibilidad(!isInvencible());
     }
 
     public void setConexion(Connection<Bundle> conexion) {

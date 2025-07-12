@@ -455,6 +455,13 @@ public class ClientGameApp extends GameApplication {
                 player.transformarSuperSonic();
             }
         }, KeyCode.P);
+
+        getInput().addAction(new UserAction("Desactivar filtro") {
+            @Override
+            protected void onActionBegin() {
+                GameLogic.filtroColor(0);
+            }
+        }, KeyCode.L);
     }
 
    @Override
