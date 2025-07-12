@@ -59,7 +59,6 @@ public class Player extends Entity {
     }
 
     public void saltar() {
-        play("salto.wav");
         this.getComponentOptional(KnucklesComponent.class).ifPresent(KnucklesComponent::saltar);
         this.getComponentOptional(TailsComponent.class).ifPresent(TailsComponent::saltar);
         this.getComponentOptional(SonicComponent.class).ifPresent(SonicComponent::saltar);

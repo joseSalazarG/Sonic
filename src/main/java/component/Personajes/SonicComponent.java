@@ -6,6 +6,7 @@ import javafx.scene.image.Image;
 import javafx.util.Duration;
 
 import static com.almasb.fxgl.dsl.FXGL.image;
+import static com.almasb.fxgl.dsl.FXGL.play;
 
 public class SonicComponent extends PlayerComponent {
 
@@ -52,5 +53,10 @@ public class SonicComponent extends PlayerComponent {
         saltando = NORMAL_SALTO;
     }
 
+    @Override
+    public void saltar() {
+        super.saltar();
+        play("salto.wav");
+    }
 
 }

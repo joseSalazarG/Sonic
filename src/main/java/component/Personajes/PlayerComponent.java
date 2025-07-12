@@ -66,8 +66,6 @@ public abstract class PlayerComponent extends Component {
     }
 
     public void saltar() {
-        play("salto.wav");
-
         if (saltosPermitidos == 0)
             return;
 

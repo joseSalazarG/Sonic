@@ -15,7 +15,7 @@ import com.almasb.fxgl.net.Connection;
 import component.GameFactory;
 import component.Personajes.PlayerComponent;
 import component.GameLogic;
-
+import component.Enemigos.EggmanComponent;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +38,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
     private Player player;
     private int totalBasura = 0;
     private Set<Integer> eventosDisparados = new HashSet<>();
+    private Map<String, Entity> eggmanBoss = new HashMap<>();
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -118,16 +119,19 @@ public class ServerGameApp extends GameApplication implements Serializable{
             spawnArbol.put("y", arbol.getY());
             server.broadcast(spawnArbol);
         }
-        else if (cantidadRestante <= 3 && !eventosDisparados.contains(3)) {
-            eventosDisparados.add(3);
+        else if (cantidadRestante <= 6 && !eventosDisparados.contains(6)) {
+            eventosDisparados.add(6);
 
             System.out.println("eggman hizo spawn");
-
-            Entity eggman = spawn("eggman", 3900, 1250); // punto inicial
+            String eggmanId = UUID.randomUUID().toString();
+            Entity eggman = spawn("eggman", 1330, 340);
+            eggman.getProperties().setValue("id", eggmanId);
+            eggmanBoss.put(eggmanId, eggman);
 
             Bundle crearEggman = new Bundle("CrearEggman");
             crearEggman.put("x", eggman.getX());
             crearEggman.put("y", eggman.getY());
+            crearEggman.put("id", eggmanId);
             server.broadcast(crearEggman);
         }
     }
@@ -195,7 +199,8 @@ public class ServerGameApp extends GameApplication implements Serializable{
                 }
                 
                 case "Hola": //NO LO BORRES :P
-                    System.out.println("sonic se conecto");
+                    System.out.println("jugador se conecto");
+                    verificarEventoBasura();
 
                     for (Bundle personaje : personajesExistentes) {
                         Bundle copia = new Bundle("Crear Personaje");
@@ -250,6 +255,25 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     estadoBasura.put("restante", basuras.size());
                     conn.send(estadoBasura);
                     break;
+
+                case "DañoEggman": {
+                    String eggmanId = bundle.get("eggmanId");
+                    String playerId = bundle.get("playerId");
+
+                    Entity eggman = eggmanBoss.get(eggmanId);
+                    if (eggman != null) {
+                        EggmanComponent egg = eggman.getComponent(EggmanComponent.class);
+                        egg.restarVida();
+                        if (egg.estaMuerto()){
+                            Bundle eggmanEliminado = new Bundle("EggmanEliminado");
+                            eggmanEliminado.put("playerId", playerId);
+                            eggmanEliminado.put("eggmanId", eggmanId);
+                            server.broadcast(eggmanEliminado);
+                        }
+                    }
+
+                    break;
+                }
 
                 case "RecogerAnillo": {
                     String playerId = bundle.get("playerId");

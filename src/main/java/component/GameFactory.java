@@ -257,22 +257,25 @@ public class GameFactory implements EntityFactory {
     }
 
     @Spawns("eggman")
-    public Entity patrulla(SpawnData data) {
+    public Entity eggman(SpawnData data) {
         PhysicsComponent physics = new PhysicsComponent();
         physics.setBodyType(BodyType.KINEMATIC);
 
         FixtureDef fixture = new FixtureDef();
-        fixture.setFriction(1.0f);
         fixture.setRestitution(0.0f);
         physics.setFixtureDef(fixture);
 
-        return entityBuilder(data)
+        Entity eggman = entityBuilder(data)
                 .type(EntityType.EGGMAN)
                 .bbox(new HitBox(new Point2D(10, 10), BoundingShape.circle(40)))
                 .with(physics)
                 .with(new CollidableComponent(true))
-                .with(new EggmanComponent())
-                .with("altura", 100.0)     
+                .with(new component.Enemigos.EggmanComponent())
+                .with("altura", 100.0)
                 .build();
+
+        eggman.getProperties().setValue("id", java.util.UUID.randomUUID().toString());
+
+        return eggman;
     }
 }

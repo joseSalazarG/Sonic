@@ -152,6 +152,13 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
+                case "EggmanEliminado": {
+                    String eggmanId = bundle.get("eggmanId");
+
+                    showGameWon();
+                    break;
+                }
+
                 case "RobotEliminado": {
                     String robotId = bundle.get("robotId");
 
@@ -208,10 +215,10 @@ public class ClientGameApp extends GameApplication {
                 case "CrearEggman": {
                     double x = ((Number) bundle.get("x")).doubleValue();
                     double y = ((Number) bundle.get("y")).doubleValue();
+                    String id = bundle.get("id");
+                    Entity eggman = spawn("eggman", x, y);
+                    eggman.getProperties().setValue("id", id); // Guarda el id para identificarlo luego
 
-                    if (getGameWorld().getEntitiesByType(GameFactory.EntityType.EGGMAN).isEmpty()) {
-                        spawn("eggman", x, y);
-                    }
                     break;
                 }
 
@@ -536,12 +543,13 @@ public class ClientGameApp extends GameApplication {
             boolean golpeDesdeArriba = bottomPlayer <= topEggman + 10;
 
             if (golpeDesdeArriba) {
-                //todo: enviar mensaje al servidor para quitarle vidas al eggman
-                //perderVidas(eggman);
+                String eggmanId = eggman.getProperties().getString("id");
+                Bundle dañoEggman = new Bundle("DañoEggman");
+                dañoEggman.put("eggmanId", eggmanId);
+                dañoEggman.put("playerId", player.getId());
+                conexion.send(dañoEggman);
 
-                if (entidad.hasComponent(PhysicsComponent.class)) {
-                    entidad.getComponent(PhysicsComponent.class).setVelocityY(-300);
-                }
+                player.getComponent(PhysicsComponent.class).setVelocityY(-300);
             } else {
                 perderVidas();
             }
@@ -587,6 +595,12 @@ public class ClientGameApp extends GameApplication {
 
     private void showGameOver() {
         getDialogService().showMessageBox("Game Over", () -> {
+            FXGL.getGameController().exit();
+        });
+    }
+
+    private void showGameWon() {
+        getDialogService().showMessageBox("You Win!", () -> {
             FXGL.getGameController().exit();
         });
     }
