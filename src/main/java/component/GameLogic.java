@@ -1,17 +1,21 @@
 package component;
 
+import GameSettings.Player;
 import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.net.Connection;
+import com.almasb.fxgl.time.TimerAction;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 
-import static com.almasb.fxgl.dsl.FXGL.addUINode;
-import static com.almasb.fxgl.dsl.FXGL.getGameScene;
+import static com.almasb.fxgl.dsl.FXGL.*;
+import static com.almasb.fxgl.dsl.FXGL.getGameTimer;
 
 public class GameLogic extends Component implements Serializable {
 
@@ -49,6 +53,14 @@ public class GameLogic extends Component implements Serializable {
     public static void enviarMensaje(String titulo, Connection<Bundle> conexion) {
         Bundle bundle = new Bundle(titulo);
         conexion.send(bundle);
+    }
+
+    public static void SyncPos(@Nullable Player player) {
+        Bundle bundle = new Bundle("syncPos");
+        bundle.put("x", player.getPosition().getX());
+        bundle.put("y", player.getPosition().getY());
+        bundle.put("tipo", player.getTipo());
+        player.getConexion().send(bundle);
     }
 
     public static void imprimir(String titulo) {
@@ -125,6 +137,20 @@ public class GameLogic extends Component implements Serializable {
         textoVidas.setText("Vidas: 3");
         textoBasura.setText("Basura: 0");
         textoPapel.setText("Papel: 0");
+    }
+
+    public static void activarInvencibilidad(int milisegundos, Player player) {
+        player.setInvencibilidad(true);
+
+        TimerAction blinkAction = getGameTimer().runAtInterval(() -> {
+            player.getViewComponent().setVisible(!player.getViewComponent().isVisible());
+        }, Duration.millis(200));
+
+        getGameTimer().runOnceAfter(() -> {
+            player.setInvencibilidad(false);
+            player.getViewComponent().setVisible(true);
+            blinkAction.expire();
+        }, Duration.millis(milisegundos));
     }
 
 
