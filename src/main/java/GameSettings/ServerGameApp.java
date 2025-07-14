@@ -14,8 +14,10 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
 import component.GameFactory;
 import component.Personajes.PlayerComponent;
+import component.Personajes.SonicComponent;
 import component.GameLogic;
 import component.Enemigos.EggmanComponent;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,10 +37,11 @@ public class ServerGameApp extends GameApplication implements Serializable{
     private Map<String, Entity> anillos = new HashMap<>();
     private Map<String, Entity> basuras = new HashMap<>();
     private Map<String, Entity> robots = new HashMap<>();
+    private Map<String, Entity> eggmanBoss = new HashMap<>();
     private Player player;
     private int totalBasura = 0;
     private Set<Integer> eventosDisparados = new HashSet<>();
-    private Map<String, Entity> eggmanBoss = new HashMap<>();
+    
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -65,12 +68,14 @@ public class ServerGameApp extends GameApplication implements Serializable{
         System.out.println("Servidor creado");
         server.startAsync();
         Jugar();
+        
     }
 
       private void Jugar(){
         getGameWorld().addEntityFactory(new GameFactory());
         player = null;
         Level level = setLevelFromMap("mapazo.tmx");
+       
 
         // Spawnea todos los anillos en el servidor
         for (int[] pos : posicionesRings) {
@@ -199,7 +204,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
                 }
                 
                 case "Hola": //NO LO BORRES :P
-                    System.out.println("jugador se conecto");
+                    System.out.println("sonic se conecto");
                     verificarEventoBasura();
 
                     for (Bundle personaje : personajesExistentes) {
@@ -256,25 +261,6 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     conn.send(estadoBasura);
                     break;
 
-                case "DañoEggman": {
-                    String eggmanId = bundle.get("eggmanId");
-                    String playerId = bundle.get("playerId");
-
-                    Entity eggman = eggmanBoss.get(eggmanId);
-                    if (eggman != null) {
-                        EggmanComponent egg = eggman.getComponent(EggmanComponent.class);
-                        egg.restarVida();
-                        if (egg.estaMuerto()){
-                            Bundle eggmanEliminado = new Bundle("EggmanEliminado");
-                            eggmanEliminado.put("playerId", playerId);
-                            eggmanEliminado.put("eggmanId", eggmanId);
-                            server.broadcast(eggmanEliminado);
-                        }
-                    }
-
-                    break;
-                }
-
                 case "RecogerAnillo": {
                     String playerId = bundle.get("playerId");
                     String ringId = bundle.get("ringId");
@@ -310,6 +296,25 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     robotEliminado.put("playerId", playerId);
                     robotEliminado.put("robotId", robotId);
                     server.broadcast(robotEliminado);
+                    break;
+                }
+
+                case "DañoEggman": {
+                    String eggmanId = bundle.get("eggmanId");
+                    String playerId = bundle.get("playerId");
+
+                    Entity eggman = eggmanBoss.get(eggmanId);
+                    if (eggman != null) {
+                        EggmanComponent egg = eggman.getComponent(EggmanComponent.class);
+                        egg.restarVida();
+                        if (egg.estaMuerto()){
+                            Bundle eggmanEliminado = new Bundle("EggmanEliminado");
+                            eggmanEliminado.put("playerId", playerId);
+                            eggmanEliminado.put("eggmanId", eggmanId);
+                            server.broadcast(eggmanEliminado);
+                        }
+                    }
+                    
                     break;
                 }
 

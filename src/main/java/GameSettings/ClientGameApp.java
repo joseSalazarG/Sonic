@@ -1,7 +1,10 @@
 package GameSettings;
 
 import com.almasb.fxgl.audio.Music;
+import com.almasb.fxgl.audio.Sound;
+import com.almasb.fxgl.core.asset.AssetType;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.input.virtual.VirtualButton;
 import com.almasb.fxgl.multiplayer.MultiplayerService;
@@ -9,26 +12,40 @@ import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.app.GameApplication;
 import static com.almasb.fxgl.dsl.FXGL.*;
+import static javafx.scene.text.Font.loadFont;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import component.GameLogic;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.text.Font;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
 import com.almasb.fxgl.physics.PhysicsComponent;
+import com.almasb.fxgl.time.TimerAction;
+
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import component.GameFactory;
+import component.Enemigos.EggmanComponent;
+import component.Enemigos.RobotComponent;
 import component.Personajes.KnucklesComponent;
+import component.Personajes.PlayerComponent;
 import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
 import javafx.scene.text.Text;
 import javafx.scene.Scene;
+import javafx.scene.effect.ColorAdjust;
+
+// TODO arreglar empujes entre entidades para mejor sincronizacion
 
 public class ClientGameApp extends GameApplication {
 
@@ -36,7 +53,8 @@ public class ClientGameApp extends GameApplication {
     private final int altoPantalla = 600;
     private Connection<Bundle> conexion;
     private Map<String, Player> personajeRemotos = new HashMap<>();
-    private Player player = new Player();
+    private Player player;
+    private String miID;
     private String personajePendiente = null;
     private int contadorAnillos = 0;
     private int contadorBasura = 0;
@@ -44,6 +62,7 @@ public class ClientGameApp extends GameApplication {
     private int contadorCaucho = 0;
     private boolean flag_Interactuar = false;
     private Entity stand_by;
+    private boolean invulnerable = false;
     public GameLogic gameLogic;
 
     @Override
@@ -120,20 +139,21 @@ public class ClientGameApp extends GameApplication {
         conexion.addMessageHandlerFX((conexion, bundle) -> {
             switch (bundle.getName()) {
                 case "TuID": {
-                    player.setId(bundle.get("id"));
+                    miID = bundle.get("id");
                     Bundle solicitar = new Bundle("SolicitarCrearPersonaje");
-                    solicitar.put("id", player.getId());
+                    solicitar.put("id", miID);
                     solicitar.put("tipo", personajePendiente);
                     conexion.send(solicitar);
 
                     // Envia posicion inicial para sincronizar servidor
                     Bundle sync = new Bundle("SyncPos");
-                    sync.put("id", player.getId());
+                    sync.put("id", miID);
                     sync.put("x", 50);
                     sync.put("y", 150);
                     conexion.send(sync);
                     break;
                 }
+
 
                 case "AnilloRecogido": {
                     String ringId = bundle.get("ringId");
@@ -145,17 +165,10 @@ public class ClientGameApp extends GameApplication {
 
                     // Actualiza contador si el jugador es uno mismo
                     String playerId = bundle.get("playerId");
-                    if (playerId.equals(player.getId())) {
+                    if (playerId.equals(miID)) {
                         contadorAnillos++;
                         gameLogic.cambiarTextoAnillos("anillos: " + contadorAnillos);
                     }
-                    break;
-                }
-
-                case "EggmanEliminado": {
-                    String eggmanId = bundle.get("eggmanId");
-
-                    showGameWon();
                     break;
                 }
 
@@ -166,6 +179,14 @@ public class ClientGameApp extends GameApplication {
                         .filter(r -> robotId.equals(r.getProperties().getString("id")))
                         .findFirst()
                         .ifPresent(Entity::removeFromWorld);
+
+                    break;
+                }
+
+                case "EggmanEliminado": {
+                    String eggmanId = bundle.get("eggmanId");
+
+                    showGameWon();
                     break;
                 }
 
@@ -183,7 +204,7 @@ public class ClientGameApp extends GameApplication {
                             String tipoBasura = entity.getProperties().getString("tipo");
                             entity.removeFromWorld();
 
-                            if (bundle.get("playerId").equals(player.getId())) {
+                            if (bundle.get("playerId").equals(miID)) {
                                 switch (tipoBasura) {
                                     case "papel":
                                         contadorPapel++;
@@ -200,6 +221,7 @@ public class ClientGameApp extends GameApplication {
                                 }
                             }
                         });
+
                     break;
                 }
 
@@ -218,7 +240,7 @@ public class ClientGameApp extends GameApplication {
                     String id = bundle.get("id");
                     Entity eggman = spawn("eggman", x, y);
                     eggman.getProperties().setValue("id", id); // Guarda el id para identificarlo luego
-
+                 
                     break;
                 }
 
@@ -245,17 +267,15 @@ public class ClientGameApp extends GameApplication {
                 }
 
                 case "Crear Personaje": {
-                    System.out.println("Creando personaje: " + bundle.get("tipo"));
                     String id = bundle.get("id");
                     String tipo = bundle.get("tipo");
                     double x = ((Number)bundle.get("x")).doubleValue();
                     double y = ((Number)bundle.get("y")).doubleValue();
 
-                    if (id.equals(player.getId())) {
-                        if (player.getTipo().equals("")) {
+                    if (id.equals(miID)) {
+                        if (player == null) {
                             Entity entidad = spawn(tipo, x, y);
                             player = (Player) entidad;
-                            player.setConexion(conexion);
                             // mitad de la pantalla en x, y un poco mas abajo en y
                             getGameScene().getViewport().bindToEntity(player, anchoPantalla/2.0, altoPantalla/1.5);
                             getGameScene().getViewport().setLazy(true);
@@ -274,12 +294,13 @@ public class ClientGameApp extends GameApplication {
                             remotePlayer.setY(y);
                         }
                     }
+
                     break;
                 }
 
                 case "SyncPos": {
                     String syncId = bundle.get("id");
-                    if (syncId.equals(player.getId())) {
+                    if (syncId.equals(miID)) {
                         return; // Ignorarte a ti mismo
                     }
 
@@ -289,6 +310,7 @@ public class ClientGameApp extends GameApplication {
                         Number yNum = bundle.get("y");
                         remotePlayer.setX(xNum.doubleValue());
                         remotePlayer.setY(yNum.doubleValue());
+                    } else {
                     }
                     break;
                 }
@@ -314,6 +336,7 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
+
                 case "EstadoBasuraGlobal": {
                     int total = bundle.get("total");
                     int restante = bundle.get("restante");
@@ -338,7 +361,7 @@ public class ClientGameApp extends GameApplication {
                 case "Saltar":
                 case "Detente": {
                     String moveId = bundle.get("id");
-                    if (moveId.equals(player.getId())) {
+                    if (moveId.equals(miID)) {
                         return; // Ignora tus propios mensajes
                     }
                     Player remotePlayer = personajeRemotos.get(moveId);
@@ -365,6 +388,19 @@ public class ClientGameApp extends GameApplication {
             }
         });
     }
+
+    @Override
+    protected void onUpdate(double tpf) {
+        if (conexion != null && player != null) {
+            if (System.currentTimeMillis() % 100 < 16) {
+                Bundle bundle = new Bundle("SyncPos");
+                bundle.put("id", miID);
+                bundle.put("x", player.getX());
+                bundle.put("y", player.getY());
+                conexion.send(bundle);
+            }
+        }
+    }
             
     @Override
     protected void initInput() {
@@ -373,11 +409,11 @@ public class ClientGameApp extends GameApplication {
             protected void onAction() {
                 if (player == null) return;
                 Bundle bundle = new Bundle("Mover a la izquierda");
-                bundle.put("id", player.getId());
+                bundle.put("id", miID);
                 conexion.send(bundle);
                 player.moverIzquierda();
                 Bundle sync = new Bundle("SyncPos");
-                sync.put("id", player.getId());
+                sync.put("id", miID);
                 sync.put("x", player.getX());
                 sync.put("y", player.getY());
                 conexion.send(sync);
@@ -386,11 +422,11 @@ public class ClientGameApp extends GameApplication {
             protected void onActionEnd() {
                 if (player == null) return;
                 Bundle bundle = new Bundle("Detente");
-                bundle.put("id", player.getId());
+                bundle.put("id", miID);
                 conexion.send(bundle);
                 player.detener();
                 Bundle sync = new Bundle("SyncPos");
-                sync.put("id", player.getId());
+                sync.put("id", miID);
                 sync.put("x", player.getX());
                 sync.put("y", player.getY());
                 conexion.send(sync);
@@ -402,11 +438,11 @@ public class ClientGameApp extends GameApplication {
             protected void onAction() {
                 if (player == null) return;
                 Bundle bundle = new Bundle("Mover a la derecha");
-                bundle.put("id", player.getId());
+                bundle.put("id", miID);
                 conexion.send(bundle);
                 player.moverDerecha();
                 Bundle sync = new Bundle("SyncPos");
-                sync.put("id", player.getId());
+                sync.put("id", miID);
                 sync.put("x", player.getX());
                 sync.put("y", player.getY());
                 conexion.send(sync);
@@ -415,11 +451,11 @@ public class ClientGameApp extends GameApplication {
             protected void onActionEnd() {
                 if (player == null) return;
                 Bundle bundle = new Bundle("Detente");
-                bundle.put("id", player.getId());
+                bundle.put("id", miID);
                 conexion.send(bundle);
                 player.detener();
                 Bundle sync = new Bundle("SyncPos");
-                sync.put("id", player.getId());
+                sync.put("id", miID);
                 sync.put("x", player.getX());
                 sync.put("y", player.getY());
                 conexion.send(sync);
@@ -431,10 +467,14 @@ public class ClientGameApp extends GameApplication {
             protected void onActionBegin() {
                 if (player == null) return;
                 Bundle bundle = new Bundle("Saltar");
-                bundle.put("id", player.getId());
+                bundle.put("id", miID);
                 conexion.send(bundle);
                 player.saltar();
-                GameLogic.SyncPos(player);
+                Bundle sync = new Bundle("SyncPos");
+                sync.put("id", miID);
+                sync.put("x", player.getX());
+                sync.put("y", player.getY());
+                conexion.send(sync);
             }
         }, KeyCode.W, VirtualButton.A);
 
@@ -445,7 +485,7 @@ public class ClientGameApp extends GameApplication {
                 if (flag_Interactuar) { // Solo interactuar si se ha activado la bandera
                     // Enviar mensaje al servidor para interactuar con el entorno
                     Bundle bundle = new Bundle("Interactuar");
-                    bundle.put("id", player.getId());
+                    bundle.put("id", miID);
                     bundle.put("tipo", player.getTipo());
                     conexion.send(bundle);
                     player.interactuar();
@@ -454,69 +494,66 @@ public class ClientGameApp extends GameApplication {
                 }
             }
         }, KeyCode.E);
+    }
 
-        getInput().addAction(new UserAction("Transformar") {
-            @Override
-            protected void onActionBegin() {
-                if (player == null) return;
-                player.transformarSuperSonic();
-            }
-        }, KeyCode.P);
-
-        getInput().addAction(new UserAction("Desactivar filtro") {
-            @Override
-            protected void onActionBegin() {
-                GameLogic.filtroColor(0);
-            }
-        }, KeyCode.L);
+    @Override
+    protected void initUI() {
+        //fixme: no funciona la fuente personalizada
+        //Font fuente = getAssetLoader().load(AssetType.FONT,"SegaSonic.ttf");
+        //GameLogic.agregarTexto("Anillos: 0", "yellow", 24, 20, 20);
+        //GameLogic.agregarTexto("Basura: 0", "blue", 24, 20, 50);
+        //GameLogic.agregarTexto("Papel: 0", "white", 24, 20, 80);
+        //GameLogic.agregarTexto("Caucho: 0", "red", 24, 20, 110);
+        //GameLogic.agregarTexto("Basura restante: 0", "orange", 24, 700, 20);
+        //GameLogic.agregarTexto("Vidas: 3", "green", 24, 700, 50);
     }
 
    @Override
     protected void initPhysics() {
 
-        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.RING, (jugador, ring) -> {
+        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.RING, (player, ring) -> {
             play("recoger.wav");
             String ringId = ring.getProperties().getString("id");
             Bundle recoger = new Bundle("RecogerAnillo");
             recoger.put("ringId", ringId);
-            recoger.put("playerId", player.getId());
+            recoger.put("playerId", miID);
             conexion.send(recoger);
         });
 
-        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.BASURA, (jugador, basura) -> {
+        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.BASURA, (player, basura) -> {
             if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {
-                recogerBasura((Player)jugador, basura);
+                recogerBasura((Player)player, basura);
             }
         });
 
-        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.PAPEL, (jugador, papel) -> {
+        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.PAPEL, (player, papel) -> {
             if (player.hasComponent(TailsComponent.class)) {
-                recogerBasura((Player)jugador, papel);
+                recogerBasura((Player)player, papel);
             }
         });
 
-        onCollisionBegin(GameFactory.EntityType.KNUCKLES, GameFactory.EntityType.CAUCHO, (jugador, caucho) -> {
+        onCollisionBegin(GameFactory.EntityType.KNUCKLES, GameFactory.EntityType.CAUCHO, (player, caucho) -> {
             if (player.hasComponent(KnucklesComponent.class)) {
                 flag_Interactuar = true;
                 stand_by = caucho; // Guarda la entidad caucho para interactuar
             }
         });
 
-        onCollisionEnd(GameFactory.EntityType.PLAYER, GameFactory.EntityType.CAUCHO, (jugador, caucho) -> {
+        onCollisionEnd(GameFactory.EntityType.PLAYER, GameFactory.EntityType.CAUCHO, (player, caucho) -> {
             flag_Interactuar = false;
         });
 
-       onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.BASURA, (jugador, basura) -> {
-           if (jugador.hasComponent(SonicComponent.class) || jugador.hasComponent(TailsComponent.class) || jugador.hasComponent(KnucklesComponent.class)) {
-               recogerBasura((Player) jugador, basura);
+       onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.BASURA, (playerEntity, basura) -> {
+           if (playerEntity.hasComponent(SonicComponent.class) || playerEntity.hasComponent(TailsComponent.class) || playerEntity.hasComponent(KnucklesComponent.class)) {
+               recogerBasura((Player) playerEntity, basura);
            }
        });
 
-       onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.ROBOT_ENEMIGO, (entidad, robot) -> {
-           double alturaPlayer = entidad.getHeight();
+       onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.ROBOT_ENEMIGO, (player, robot) -> {
+           double alturaPlayer = player.getHeight();
            double alturaRobot = robot.getHeight();
 
-           double bottomPlayer = entidad.getY() + alturaPlayer;
+           double bottomPlayer = player.getY() + alturaPlayer;
            double topRobot = robot.getY();
 
            boolean golpeDesdeArriba = bottomPlayer <= topRobot + 10;
@@ -525,45 +562,46 @@ public class ClientGameApp extends GameApplication {
                String robotId = robot.getProperties().getString("id");
                Bundle eliminar = new Bundle("EliminarRobot");
                eliminar.put("robotId", robotId);
-               eliminar.put("playerId", player.getId());
+               eliminar.put("playerId", miID);
                conexion.send(eliminar);
-               entidad.getComponent(PhysicsComponent.class).setVelocityY(-300);
+               player.getComponent(PhysicsComponent.class).setVelocityY(-300);
            } else {
                perderVidas();
            }
        });
 
-        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.EGGMAN, (entidad, eggman) -> {
-            double alturaPlayer = entidad.getHeight();
+        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.EGGMAN, (player, eggman) -> {
+            double alturaPlayer = player.getHeight();
             double alturaEggman = eggman.getHeight();
 
-            double bottomPlayer = entidad.getY() + alturaPlayer;
+            double bottomPlayer = player.getY() + alturaPlayer;
             double topEggman = eggman.getY();
 
             boolean golpeDesdeArriba = bottomPlayer <= topEggman + 10;
 
             if (golpeDesdeArriba) {
-                String eggmanId = eggman.getProperties().getString("id");
-                Bundle dañoEggman = new Bundle("DañoEggman");
-                dañoEggman.put("eggmanId", eggmanId);
-                dañoEggman.put("playerId", player.getId());
-                conexion.send(dañoEggman);
+               String eggmanId = eggman.getProperties().getString("id");
+               Bundle dañoEggman = new Bundle("DañoEggman");
+               dañoEggman.put("eggmanId", eggmanId);
+               dañoEggman.put("playerId", miID);
+               conexion.send(dañoEggman);
 
                 player.getComponent(PhysicsComponent.class).setVelocityY(-300);
+                
             } else {
                 perderVidas();
             }
         });
     }
 
-    private void recogerBasura(Player entidad, Entity basuraEntidad) {
+    private void recogerBasura(Player player, Entity basuraEntidad) {
         String trashId = basuraEntidad.getProperties().getString("id");
 
-        String tipo = entidad.getTipo();
+        String tipo = player.getTipo();
 
         Bundle recoger = new Bundle("RecogerBasura");
         recoger.put("trashId", trashId);
-        recoger.put("playerId", player.getId());
+        recoger.put("playerId", miID);
         recoger.put("tipo", tipo);
         conexion.send(recoger);
     }
@@ -571,7 +609,7 @@ public class ClientGameApp extends GameApplication {
     private void perderVidas() {
         long ahora = System.currentTimeMillis();
 
-        if (player.isInvencible()){
+        if (invulnerable){
             return;
         }
         
@@ -579,7 +617,7 @@ public class ClientGameApp extends GameApplication {
             play("perder_anillos.wav");
             contadorAnillos = 0;
             gameLogic.cambiarTextoAnillos("Anillos: " + contadorAnillos);
-            GameLogic.activarInvencibilidad(3000, player);
+            activarInvencibilidad(3000, player);
             return; 
         }
 
@@ -589,7 +627,7 @@ public class ClientGameApp extends GameApplication {
         if (player.estaMuerto()) {
             showGameOver();
         } else {
-            GameLogic.activarInvencibilidad(3000, player);
+            activarInvencibilidad(3000, player);
         }
     }
 
@@ -605,16 +643,17 @@ public class ClientGameApp extends GameApplication {
         });
     }
 
-    @Override
-    protected void onUpdate(double tpf) {
-        if (conexion != null && player != null) {
-            if (System.currentTimeMillis() % 100 < 16) {
-                Bundle bundle = new Bundle("SyncPos");
-                bundle.put("id", player.getId());
-                bundle.put("x", player.getX());
-                bundle.put("y", player.getY());
-                conexion.send(bundle);
-            }
-        }
+    private void activarInvencibilidad(int milisegundos, Entity player) {
+        invulnerable = true;
+
+        TimerAction blinkAction = getGameTimer().runAtInterval(() -> {
+            player.getViewComponent().setVisible(!player.getViewComponent().isVisible());
+        }, Duration.millis(200));
+
+        getGameTimer().runOnceAfter(() -> {
+            invulnerable = false;
+            player.getViewComponent().setVisible(true); 
+            blinkAction.expire();
+        }, Duration.millis(milisegundos));
     }
 }

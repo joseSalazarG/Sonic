@@ -262,6 +262,7 @@ public class GameFactory implements EntityFactory {
         physics.setBodyType(BodyType.KINEMATIC);
 
         FixtureDef fixture = new FixtureDef();
+        fixture.setFriction(1.0f);
         fixture.setRestitution(0.0f);
         physics.setFixtureDef(fixture);
 
@@ -271,10 +272,10 @@ public class GameFactory implements EntityFactory {
                 .with(physics)
                 .with(new CollidableComponent(true))
                 .with(new component.Enemigos.EggmanComponent())
-                .with("altura", 100.0)
+                .with("altura", 100.0)     
                 .build();
-
-        eggman.getProperties().setValue("id", java.util.UUID.randomUUID().toString());
+                
+         eggman.getProperties().setValue("id", java.util.UUID.randomUUID().toString()); 
 
         return eggman;
     }
