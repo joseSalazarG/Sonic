@@ -2,6 +2,8 @@ package component;
 
 import GameSettings.Player;
 import com.almasb.fxgl.core.serialization.Bundle;
+import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.net.Connection;
 import com.almasb.fxgl.time.TimerAction;
@@ -48,11 +50,6 @@ public class GameLogic extends Component implements Serializable {
         addUINode(textoVidas, 700, 50);
         addUINode(textoBasura, 20, 50);
         addUINode(textoPapel, 20, 80);
-    }
-
-    public static void enviarMensaje(String titulo, Connection<Bundle> conexion) {
-        Bundle bundle = new Bundle(titulo);
-        conexion.send(bundle);
     }
 
     public static void SyncPos(@Nullable Player player) {
@@ -153,5 +150,15 @@ public class GameLogic extends Component implements Serializable {
         }, Duration.millis(milisegundos));
     }
 
+    public static void Ganaste() {
+        getDialogService().showMessageBox("You Win!", () -> {
+            FXGL.getGameController().exit();
+        });
+    }
 
+    public static void gameOver() {
+        getDialogService().showMessageBox("Game Over", () -> {
+            FXGL.getGameController().exit();
+        });
+    }
 }

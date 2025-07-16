@@ -5,11 +5,8 @@ import com.almasb.fxgl.entity.components.CollidableComponent;
 import com.almasb.fxgl.entity.components.IrremovableComponent;
 import com.almasb.fxgl.entity.EntityFactory;
 import static com.almasb.fxgl.dsl.FXGL.*;
-
 import java.util.UUID;
-
 import com.almasb.fxgl.entity.SpawnData;
-
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
@@ -18,12 +15,8 @@ import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
 import component.Personajes.KnucklesComponent;
 import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
-import component.Enemigos.EggmanComponent;
-import component.Items.TrashComponent;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
-import javafx.scene.image.Image;
-
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.Spawns;
 import GameSettings.Player;
@@ -32,7 +25,7 @@ public class GameFactory implements EntityFactory {
     
 
     public enum EntityType {
-        PLAYER, FONDO, TIERRA, ROBOT_ENEMIGO, RING, AGUA, BASURA, ARBOL, PAPEL, CAUCHO, EGGMAN, KNUCKLES, SONIC, TAILS
+        PLAYER, FONDO, TIERRA, ROBOT_ENEMIGO, RING, AGUA, BASURA, ARBOL, PAPEL, CAUCHO, EGGMAN, KNUCKLES, SONIC, TAILS, ESMERALDA
     }
 
     @Spawns("fondo")
@@ -44,66 +37,47 @@ public class GameFactory implements EntityFactory {
                 .at(0, 0)
                 .build();
     }
-/*
-    @Spawns("player")
-    public Entity newPlayer(SpawnData data) {
-        PhysicsComponent physics = new PhysicsComponent();
-        physics.setBodyType(BodyType.DYNAMIC);
-        physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
-
-        // this avoids player sticking to walls
-        physics.setFixtureDef(new FixtureDef().friction(0.0f));
-
-        return entityBuilder(data)
-                .type(EntityType.PLAYER)
-                .bbox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)))
-                .bbox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)))
-                .with(physics)
-                .with(new CollidableComponent(true))
-                .with(new IrremovableComponent())
-                .with(new PlayerComponent())
-                .build();
-    } */
 
     @Spawns("sonic")
     public Player sonic(SpawnData data) {
-            PhysicsComponent physics = new PhysicsComponent();
-            physics.setBodyType(BodyType.DYNAMIC);
-            physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
+        PhysicsComponent fisicas = new PhysicsComponent();
+        fisicas.setBodyType(BodyType.DYNAMIC); // esto le agrega gravedad al personaje
+        fisicas.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
 
-            FixtureDef fixtureDef = new FixtureDef();
-            fixtureDef.setFriction(1.0f);  // Esto es lo mejor que encontre para reducir al minimo los empujes, pero no lo soluciona
-            fixtureDef.setRestitution(0.0f);
-            physics.setFixtureDef(fixtureDef);
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.setFriction(1.0f);  // Esto es lo mejor que encontre para reducir al minimo los empujes, pero no lo soluciona
+        fixtureDef.setRestitution(0.2f); // rebote
+        fisicas.setFixtureDef(fixtureDef);
 
-            Player player = new Player();
+        Player player = new Player();
 
-            player.setType(EntityType.PLAYER);
-            player.setTipo("sonic");
-            player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
-            player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
+        player.setType(EntityType.PLAYER);
+        player.setTipo("sonic");
+        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
+        player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
 
-            player.addComponent(physics);
-            player.addComponent(new CollidableComponent(true));
-            player.addComponent(new IrremovableComponent());
-            player.addComponent(new SonicComponent());
+        player.addComponent(fisicas);
+        player.addComponent(new CollidableComponent(true));
+        player.getComponent(CollidableComponent.class).addIgnoredType(EntityType.PLAYER);
+        player.addComponent(new IrremovableComponent());
+        player.addComponent(new SonicComponent());
 
-            player.setPosition(data.getX(), data.getY());
-            player.getProperties().setValue("altura", 32.0);
+        player.setPosition(data.getX(), data.getY());
+        player.getProperties().setValue("altura", 32.0);
 
         return player;
     }
 
     @Spawns("tails")
     public Player tails(SpawnData data) {
-        PhysicsComponent physics = new PhysicsComponent();
-        physics.setBodyType(BodyType.DYNAMIC);
-        physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
+        PhysicsComponent fisicas = new PhysicsComponent();
+        fisicas.setBodyType(BodyType.DYNAMIC); // esto le agrega gravedad al personaje
+        fisicas.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
 
         FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.setFriction(1.0f);
-        fixtureDef.setRestitution(0.0f);
-        physics.setFixtureDef(fixtureDef);
+        fixtureDef.setFriction(1.0f); // friccion
+        fixtureDef.setRestitution(0.2f); // rebote
+        fisicas.setFixtureDef(fixtureDef);
 
         Player player = new Player();
 
@@ -112,8 +86,9 @@ public class GameFactory implements EntityFactory {
         player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
         player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,25), BoundingShape.box(10, 17)));
 
-        player.addComponent(physics);
+        player.addComponent(fisicas);
         player.addComponent(new CollidableComponent(true));
+        player.getComponent(CollidableComponent.class).addIgnoredType(EntityType.PLAYER);
         player.addComponent(new IrremovableComponent());
         player.addComponent(new TailsComponent());
 
@@ -125,14 +100,14 @@ public class GameFactory implements EntityFactory {
 
     @Spawns("knuckles")
     public Player knuckles(SpawnData data) {
-        PhysicsComponent physics = new PhysicsComponent();
-        physics.setBodyType(BodyType.DYNAMIC);
-        physics.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
+        PhysicsComponent fisicas = new PhysicsComponent();
+        fisicas.setBodyType(BodyType.DYNAMIC); // esto le agrega gravedad al personaje
+        fisicas.addGroundSensor(new HitBox("GROUND_SENSOR", new Point2D(16, 38), BoundingShape.box(6, 8)));
 
         FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.setFriction(1.0f);
-        fixtureDef.setRestitution(0.0f);
-        physics.setFixtureDef(fixtureDef);
+        fixtureDef.setFriction(1.0f); // friccion
+        fixtureDef.setRestitution(0.2f); // rebote
+        fisicas.setFixtureDef(fixtureDef);
 
         Player player = new Player();
 
@@ -141,8 +116,9 @@ public class GameFactory implements EntityFactory {
         player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(5,5), BoundingShape.circle(12)));
         player.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10,24), BoundingShape.box(10, 17)));
 
-        player.addComponent(physics);
+        player.addComponent(fisicas);
         player.addComponent(new CollidableComponent(true));
+        player.getComponent(CollidableComponent.class).addIgnoredType(EntityType.PLAYER);
         player.addComponent(new IrremovableComponent());
         player.addComponent(new KnucklesComponent());
 
@@ -154,13 +130,13 @@ public class GameFactory implements EntityFactory {
 
     @Spawns("plataforma")
     public Entity newPlatform(SpawnData data) {
-        PhysicsComponent physics = new PhysicsComponent();
-        physics.setBodyType(BodyType.STATIC);
+        PhysicsComponent fisicas = new PhysicsComponent();
+        fisicas.setBodyType(BodyType.STATIC);
 
         return entityBuilder(data)
                 .type(EntityType.TIERRA)
                 .bbox(new HitBox(BoundingShape.box(data.<Integer>get("width"), data.<Integer>get("height"))))
-                .with(physics)
+                .with(fisicas)
                 .build();
     }
 
@@ -239,13 +215,13 @@ public class GameFactory implements EntityFactory {
 
     @Spawns("robotEnemigo")
     public Entity robotEnemigo(SpawnData data) {
-        PhysicsComponent physics = new PhysicsComponent();
-        physics.setBodyType(BodyType.DYNAMIC);
+        PhysicsComponent fisicas = new PhysicsComponent();
+        fisicas.setBodyType(BodyType.DYNAMIC);
 
         Entity robot = entityBuilder(data)
                 .type(EntityType.ROBOT_ENEMIGO)
                 .bbox(new HitBox(new Point2D(10, 10), BoundingShape.circle(35))) // radio 32 centrada
-                .with(physics)
+                .with(fisicas)
                 .with(new CollidableComponent(true))
                 .with(new component.Enemigos.RobotComponent())
                 .with("altura", 100.0)
@@ -258,18 +234,18 @@ public class GameFactory implements EntityFactory {
 
     @Spawns("eggman")
     public Entity eggman(SpawnData data) {
-        PhysicsComponent physics = new PhysicsComponent();
-        physics.setBodyType(BodyType.KINEMATIC);
+        PhysicsComponent fisicas = new PhysicsComponent();
+        fisicas.setBodyType(BodyType.KINEMATIC);
 
         FixtureDef fixture = new FixtureDef();
         fixture.setFriction(1.0f);
         fixture.setRestitution(0.0f);
-        physics.setFixtureDef(fixture);
+        fisicas.setFixtureDef(fixture);
 
         Entity eggman = entityBuilder(data)
                 .type(EntityType.EGGMAN)
                 .bbox(new HitBox(new Point2D(10, 10), BoundingShape.circle(40)))
-                .with(physics)
+                .with(fisicas)
                 .with(new CollidableComponent(true))
                 .with(new component.Enemigos.EggmanComponent())
                 .with("altura", 100.0)     
@@ -278,5 +254,16 @@ public class GameFactory implements EntityFactory {
          eggman.getProperties().setValue("id", java.util.UUID.randomUUID().toString()); 
 
         return eggman;
+    }
+
+    @Spawns("esmeralda")
+    public Entity esmeralda(SpawnData data) {
+        Entity esmeralda = entityBuilder(data)
+                .type(EntityType.ESMERALDA)
+                .viewWithBBox("Items/roja.png").scale(2.0, 2.0)
+                .with(new CollidableComponent(true))
+                .build();
+        esmeralda.getProperties().setValue("id", java.util.UUID.randomUUID().toString());
+        return esmeralda;
     }
 }

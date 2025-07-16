@@ -21,9 +21,8 @@ public class Player extends Entity {
     String tipo = "";
     private int vidas = 3;
     private Connection<Bundle> conexion;
-    private String id = "";
     private boolean invencible = false;
-
+    private boolean transformado = false;
 
     public Player() {
         super();
@@ -40,10 +39,6 @@ public class Player extends Entity {
 
     public boolean isInvencible() {
         return invencible;
-    }
-
-    public Connection<Bundle> getConexion() {
-        return conexion;
     }
 
     public void moverIzquierda() {
@@ -101,11 +96,19 @@ public class Player extends Entity {
         return vidas <= 0;
     }
 
+    public boolean estaTransformado() {
+        return transformado;
+    }
+
+    public void setTransformado(boolean transformado) {}
+
     public void transformarSuperSonic() {
         if (!isInvencible()) {
             this.getComponentOptional(SonicComponent.class).ifPresent(SonicComponent::transformarSuperSonic);
+            setTransformado(true);
         } else {
             this.getComponentOptional(SonicComponent.class).ifPresent(SonicComponent::destransformar);
+            setTransformado(false);
         }
         setInvencibilidad(!isInvencible());
     }
@@ -114,11 +117,7 @@ public class Player extends Entity {
         this.conexion = conexion;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getId() {
-        return id;
+    public Connection<Bundle> getConexion() {
+        return conexion;
     }
 }

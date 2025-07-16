@@ -30,7 +30,6 @@ import java.util.UUID;
 public class ServerGameApp extends GameApplication implements Serializable{
     private final int anchoPantalla = 800;
     private final int altoPantalla = 500;
-    private Connection<Bundle> conexion;
     private List<Connection> conexiones = new ArrayList<>();
     private List<Bundle> personajesExistentes = new ArrayList<>();
     private com.almasb.fxgl.net.Server<Bundle> server;
@@ -38,10 +37,8 @@ public class ServerGameApp extends GameApplication implements Serializable{
     private Map<String, Entity> basuras = new HashMap<>();
     private Map<String, Entity> robots = new HashMap<>();
     private Map<String, Entity> eggmanBoss = new HashMap<>();
-    private Player player;
     private int totalBasura = 0;
     private Set<Integer> eventosDisparados = new HashSet<>();
-    
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -56,13 +53,10 @@ public class ServerGameApp extends GameApplication implements Serializable{
         server = getNetService().newTCPServer(55555);
         server.setOnConnected(conn -> {
             // Genera un id unico para el nuevo cliente
-            String nuevoId = UUID.randomUUID().toString();
             Bundle tuId = new Bundle("TuID");
-            tuId.put("id", nuevoId);
+            tuId.put("id", UUID.randomUUID().toString());
             conn.send(tuId);
-
             conexiones.add(conn); // Agrega la conexion a la lista
-
             getExecutor().startAsyncFX(() -> onServer(conn));
         });
         System.out.println("Servidor creado");
@@ -71,9 +65,8 @@ public class ServerGameApp extends GameApplication implements Serializable{
         
     }
 
-      private void Jugar(){
+    private void Jugar(){
         getGameWorld().addEntityFactory(new GameFactory());
-        player = null;
         Level level = setLevelFromMap("mapazo.tmx");
        
 
@@ -287,6 +280,19 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     // Elimina el robot en el servidor
                     Entity robot = robots.get(robotId);
                     if (robot != null) {
+                        // 15% de probabilidad de dropear una esmeralda
+                        if (Math.random() < 0.15) {
+                            String esmeraldaId = UUID.randomUUID().toString();
+                            Entity esmeralda = spawn("esmeralda", robot.getX(), robot.getY());
+                            esmeralda.getProperties().setValue("id", esmeraldaId);
+                            System.out.println("Esmeralda dropeada con id: " + esmeraldaId);
+
+                            Bundle crearEsmeralda = new Bundle("CrearEsmeralda");
+                            crearEsmeralda.put("x", esmeralda.getX());
+                            crearEsmeralda.put("y", esmeralda.getY());
+                            crearEsmeralda.put("id", esmeraldaId);
+                            server.broadcast(crearEsmeralda);
+                        }
                         robot.removeFromWorld();
                         robots.remove(robotId);
                     }
@@ -299,9 +305,8 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     break;
                 }
 
-                case "DañoEggman": {
+                case "atacarEggman": {
                     String eggmanId = bundle.get("eggmanId");
-                    String playerId = bundle.get("playerId");
 
                     Entity eggman = eggmanBoss.get(eggmanId);
                     if (eggman != null) {
@@ -309,7 +314,6 @@ public class ServerGameApp extends GameApplication implements Serializable{
                         egg.restarVida();
                         if (egg.estaMuerto()){
                             Bundle eggmanEliminado = new Bundle("EggmanEliminado");
-                            eggmanEliminado.put("playerId", playerId);
                             eggmanEliminado.put("eggmanId", eggmanId);
                             server.broadcast(eggmanEliminado);
                         }

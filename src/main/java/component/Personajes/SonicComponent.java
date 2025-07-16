@@ -55,8 +55,12 @@ public class SonicComponent extends PlayerComponent {
 
     @Override
     public void saltar() {
-        super.saltar();
+        if (saltosPermitidos == 0)
+            return;
+
         play("salto.wav");
+        fisicas.setVelocityY(-velocidad_vertical_base); // negativo para ir hacia arriba
+        saltosPermitidos--;
     }
 
 }

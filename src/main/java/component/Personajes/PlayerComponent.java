@@ -5,14 +5,13 @@ import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
 import javafx.geometry.Point2D;
-import javafx.scene.image.Image;
-import javafx.util.Duration;
+
 import static com.almasb.fxgl.dsl.FXGL.image;
 import static com.almasb.fxgl.dsl.FXGL.play;
 
 public abstract class PlayerComponent extends Component {
 
-    protected PhysicsComponent physics;
+    protected PhysicsComponent fisicas;
     protected AnimatedTexture texture;
     protected AnimationChannel parado, caminando, saltando;
     protected int saltosPermitidos = 2;
@@ -27,7 +26,7 @@ public abstract class PlayerComponent extends Component {
         entity.getTransformComponent().setScaleOrigin(new Point2D(16, 21));
         entity.getViewComponent().addChild(texture);
 
-        physics.onGroundProperty().addListener((obs, old, tocandoPiso) -> {
+        fisicas.onGroundProperty().addListener((obs, old, tocandoPiso) -> {
             if (tocandoPiso) {
                 saltosPermitidos = MAX_SALTOS;
             }
@@ -36,11 +35,11 @@ public abstract class PlayerComponent extends Component {
 
     @Override
     public void onUpdate(double tpf) {
-        if (physics.isMovingX() && !physics.isMovingY()) {
+        if (fisicas.isMovingX() && !fisicas.isMovingY()) {
             if (texture.getAnimationChannel() != caminando) {
                 texture.loopAnimationChannel(caminando);
             }
-        } else if (physics.isMovingY()) {
+        } else if (fisicas.isMovingY()) {
             if (texture.getAnimationChannel() != saltando) {
                 texture.loopAnimationChannel(saltando);
             }
@@ -53,23 +52,23 @@ public abstract class PlayerComponent extends Component {
 
     public void moverIzquierda() {
         getEntity().setScaleX(-1);
-        physics.setVelocityX(-velocidad_lateral_base);
+        fisicas.setVelocityX(-velocidad_lateral_base);
     }
 
     public void moverDerecha() {
         getEntity().setScaleX(1);
-        physics.setVelocityX(velocidad_lateral_base);
+        fisicas.setVelocityX(velocidad_lateral_base);
     }
 
     public void detener() {
-        physics.setVelocityX(0);
+        fisicas.setVelocityX(0);
     }
 
     public void saltar() {
         if (saltosPermitidos == 0)
             return;
 
-        physics.setVelocityY(-velocidad_vertical_base); // negativo para ir hacia arriba
+        fisicas.setVelocityY(-velocidad_vertical_base); // negativo para ir hacia arriba
 
         saltosPermitidos--;
     }

@@ -33,11 +33,11 @@ public class KnucklesComponent extends PlayerComponent {// Knuckles moves faster
 
     @Override
     public void onUpdate(double tpf) {
-        if (physics.isMovingX() && !physics.isMovingY()) {
+        if (fisicas.isMovingX() && !fisicas.isMovingY()) {
             if (texture.getAnimationChannel() != caminando) {
                 texture.loopAnimationChannel(caminando);
             }
-        } else if (physics.isMovingY()) {
+        } else if (fisicas.isMovingY()) {
             if (texture.getAnimationChannel() != saltando) {
                 texture.loopAnimationChannel(saltando);
             }
