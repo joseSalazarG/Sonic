@@ -278,10 +278,8 @@ public class ClientGameApp extends GameApplication {
                     double x = bundle.get("x");
                     double y = bundle.get("y");
                     String esmeraldaId = bundle.get("esmeraldaId");
-
                     Entity esmeralda = spawn("esmeralda", x, y);
                     esmeralda.getProperties().setValue("esmeraldaId", esmeraldaId);
-
                     break;
                 }
 

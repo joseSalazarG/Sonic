@@ -285,10 +285,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
                         if (Math.random() < 0.99) {
                             String esmeraldaId = UUID.randomUUID().toString();
                             Entity esmeralda = spawn("esmeralda", new SpawnData(robot.getX(), robot.getY()).put("id", esmeraldaId));
-
                             esmeraldas.put(esmeraldaId, esmeralda);
-
-
                             Bundle crearEsmeralda = new Bundle("CrearEsmeralda");
                             crearEsmeralda.put("x", esmeralda.getX());
                             crearEsmeralda.put("y", esmeralda.getY());
