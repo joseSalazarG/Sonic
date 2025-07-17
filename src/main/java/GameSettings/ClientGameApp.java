@@ -274,21 +274,22 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
-                case "CrearEsmeralda" : {
-                    System.out.println("Creando esmeralda");
-                    double x = ((Number) bundle.get("x")).doubleValue();
-                    double y = ((Number) bundle.get("y")).doubleValue();
-                    String id = bundle.get("id");
+                case "CrearEsmeralda": {
+                    double x = bundle.get("x");
+                    double y = bundle.get("y");
+                    String esmeraldaId = bundle.get("esmeraldaId");
+
                     Entity esmeralda = spawn("esmeralda", x, y);
-                    esmeralda.getProperties().setValue("id", id); // Guarda el id para identificarlo luego
+                    esmeralda.getProperties().setValue("esmeraldaId", esmeraldaId);
+
                     break;
                 }
 
                 case "EliminarEsmeralda": {
-                    String esmeraldaID = bundle.get("esmeraldaID");
+                    String esmeraldaID = bundle.get("esmeraldaId");
 
                     getGameWorld().getEntitiesByType(GameFactory.EntityType.ESMERALDA).stream()
-                            .filter(r -> esmeraldaID.equals(r.getProperties().getString("id")))
+                            .filter(r -> esmeraldaID.equals(r.getProperties().getString("esmeraldaId")))
                             .findFirst()
                             .ifPresent(Entity::removeFromWorld);
                     break;
@@ -476,6 +477,15 @@ public class ClientGameApp extends GameApplication {
             String ringId = ring.getProperties().getString("id");
             MultiplayerLogic.recogerAnillos(clientID, ringId, conexion);
         });
+
+        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.ESMERALDA, (player, esmeralda) -> {
+            if (player.hasComponent(SonicComponent.class)){
+                play("recoger.wav");
+                String esmeraldaId = esmeralda.getProperties().getString("esmeraldaId");
+                MultiplayerLogic.recogerEsmeralda(clientID, esmeraldaId, conexion);
+            }
+        });
+
 
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.BASURA, (player, basura) -> {
             if (player.hasComponent(SonicComponent.class) || player.hasComponent(TailsComponent.class) || player.hasComponent(KnucklesComponent.class)) {

@@ -90,4 +90,12 @@ public class MultiplayerLogic implements Serializable {
         conexion.send(recoger);
     }
 
+    public static void recogerEsmeralda(String clientID, String esmeraldaID, Connection<Bundle> conexion) {
+        Bundle recoger = new Bundle("RecogerEsmeralda");
+        recoger.put("esmeraldaId", esmeraldaID);
+        recoger.put("playerId", clientID);
+        conexion.send(recoger);
+    }
+
+
 }

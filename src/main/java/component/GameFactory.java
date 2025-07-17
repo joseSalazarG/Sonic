@@ -260,10 +260,12 @@ public class GameFactory implements EntityFactory {
     public Entity esmeralda(SpawnData data) {
         Entity esmeralda = entityBuilder(data)
                 .type(EntityType.ESMERALDA)
-                .viewWithBBox("Items/roja.png").scale(2.0, 2.0)
+                .bbox(new HitBox(new Point2D(0, 0), BoundingShape.circle(12))) 
+                .with(new component.Items.EsmeraldaComponent())
                 .with(new CollidableComponent(true))
+                .with("esmeraldaId", UUID.randomUUID().toString())
                 .build();
-        esmeralda.getProperties().setValue("id", java.util.UUID.randomUUID().toString());
+        esmeralda.getProperties().setValue("esmeraldaId", java.util.UUID.randomUUID().toString());
         return esmeralda;
     }
 }

@@ -1,6 +1,7 @@
 package GameSettings;
 
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.multiplayer.MultiplayerService;
 import com.almasb.fxgl.core.serialization.Bundle;
@@ -37,6 +38,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
     private Map<String, Entity> basuras = new HashMap<>();
     private Map<String, Entity> robots = new HashMap<>();
     private Map<String, Entity> eggmanBoss = new HashMap<>();
+    private Map<String, Entity> esmeraldas = new HashMap<>();
     private int totalBasura = 0;
     private Set<Integer> eventosDisparados = new HashSet<>();
 
@@ -280,30 +282,48 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     // Elimina el robot en el servidor
                     Entity robot = robots.get(robotId);
                     if (robot != null) {
-                        // 15% de probabilidad de dropear una esmeralda
-                        if (Math.random() < 0.15) {
+                        if (Math.random() < 0.99) {
                             String esmeraldaId = UUID.randomUUID().toString();
-                            Entity esmeralda = spawn("esmeralda", robot.getX(), robot.getY());
-                            esmeralda.getProperties().setValue("id", esmeraldaId);
-                            System.out.println("Esmeralda dropeada con id: " + esmeraldaId);
+                            Entity esmeralda = spawn("esmeralda", new SpawnData(robot.getX(), robot.getY()).put("id", esmeraldaId));
+
+                            esmeraldas.put(esmeraldaId, esmeralda);
+
 
                             Bundle crearEsmeralda = new Bundle("CrearEsmeralda");
                             crearEsmeralda.put("x", esmeralda.getX());
                             crearEsmeralda.put("y", esmeralda.getY());
-                            crearEsmeralda.put("id", esmeraldaId);
+                            crearEsmeralda.put("esmeraldaId", esmeraldaId);
                             server.broadcast(crearEsmeralda);
                         }
                         robot.removeFromWorld();
                         robots.remove(robotId);
                     }
 
-                    // Notifica a todos los clientes
                     Bundle robotEliminado = new Bundle("RobotEliminado");
                     robotEliminado.put("playerId", playerId);
                     robotEliminado.put("robotId", robotId);
                     server.broadcast(robotEliminado);
                     break;
                 }
+
+                case "RecogerEsmeralda": {
+                    String playerId = bundle.get("playerId");
+                    String esmeraldaId = bundle.get("esmeraldaId");
+                    Entity esmeralda = esmeraldas.get(esmeraldaId);
+
+                    if (esmeralda != null) {
+                        esmeralda.removeFromWorld();     
+                        //esmeraldas.remove(esmeraldaId);   
+                    }
+
+                    Bundle esmeraldaRecogida = new Bundle("EliminarEsmeralda");
+                    esmeraldaRecogida.put("playerId", playerId);
+                    esmeraldaRecogida.put("esmeraldaId", esmeraldaId);
+                    server.broadcast(esmeraldaRecogida);
+
+                    break;
+                }
+
 
                 case "atacarEggman": {
                     String eggmanId = bundle.get("eggmanId");
