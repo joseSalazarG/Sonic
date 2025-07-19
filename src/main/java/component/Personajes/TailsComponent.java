@@ -9,15 +9,36 @@ import static com.almasb.fxgl.dsl.FXGL.image;
 
 public class TailsComponent extends PlayerComponent {
 
+    private int vidas = 3;
+
     public TailsComponent() {
-        Image image = image("Personajes/tails.png");
-
-        velocidad_lateral_base -= 50; // se mueve ligeramenta mas lento que el jugador
-
-        parado = new AnimationChannel(image, 4, 32, 42, Duration.seconds(1), 1, 1);
-        caminando = new AnimationChannel(image, 4, 32, 42, Duration.seconds(0.66), 0, 3);
-
+        Image idle = image("Personajes/tails.png");
+        Image salta_anim = image("Personajes/tails_Salta.png");
+        Image camina_anim = image("Personajes/tails_caminando.png");
+        MAX_SALTOS = 300;
+        velocidad_lateral_base = 300; // se mueve ligeramenta mas lento que el jugador
+        velocidad_vertical_base = 200; // es mas pesado que el jugador
+        parado = new AnimationChannel(idle, 22, 41, 42, Duration.seconds(4), 0, 21);
+        caminando = new AnimationChannel(camina_anim, 8, 49, 44, Duration.seconds(0.8), 0, 7);
+        saltando = new AnimationChannel(salta_anim, 2, 41, 44, Duration.seconds(0.66), 0, 1);
         texture = new AnimatedTexture(parado);
         texture.loop();
+    }
+
+    @Override
+    public String getTipo() {
+        return "tails";
+    }
+
+    public int getVidas() { 
+        return vidas; 
+    }
+
+    public void restarVida() {
+        vidas--; 
+    }
+
+    public boolean estaMuerto() {
+        return vidas <= 0; 
     }
 }

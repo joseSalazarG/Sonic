@@ -1,10 +1,14 @@
 package GameSettings;
 
+import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.net.Connection;
 import com.almasb.fxgl.physics.HitBox;
 import component.Personajes.KnucklesComponent;
 import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
+
+import static com.almasb.fxgl.dsl.FXGL.play;
 
 /**
  *
@@ -14,8 +18,27 @@ import component.Personajes.TailsComponent;
  */
 public class Player extends Entity {
 
+    String tipo = "";
+    private int vidas = 3;
+    private Connection<Bundle> conexion;
+    private boolean invencible = false;
+    private boolean transformado = false;
+
     public Player() {
         super();
+    }
+
+    public Player(Entity entidad, Connection<Bundle> conexion) {
+        super();
+        this.conexion = conexion;
+    }
+
+    public void setInvencibilidad(boolean flag) {
+        this.invencible = flag;
+    }
+
+    public boolean isInvencible() {
+        return invencible;
     }
 
     public void moverIzquierda() {
@@ -45,5 +68,56 @@ public class Player extends Entity {
     public Player bbox(HitBox hitBox) {
         this.getBoundingBoxComponent().addHitBox(hitBox);
         return this;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void interactuar() {
+        this.getComponentOptional(KnucklesComponent.class).ifPresent(KnucklesComponent::interactuar);
+        //this.getComponentOptional(TailsComponent.class).ifPresent(TailsComponent::interactuar);
+        //this.getComponentOptional(SonicComponent.class).ifPresent(SonicComponent::interactuar);
+    }
+
+    public int getVidas() {
+        return vidas;
+    }
+
+    public void restarVida() {
+        vidas--;
+    }
+
+    public boolean estaMuerto() {
+        return vidas <= 0;
+    }
+
+    public boolean estaTransformado() {
+        return transformado;
+    }
+
+    public void setTransformado(boolean transformado) {}
+
+    public void transformarSuperSonic() {
+        if (!isInvencible()) {
+            this.getComponentOptional(SonicComponent.class).ifPresent(SonicComponent::transformarSuperSonic);
+            setTransformado(true);
+        } else {
+            this.getComponentOptional(SonicComponent.class).ifPresent(SonicComponent::destransformar);
+            setTransformado(false);
+        }
+        setInvencibilidad(!isInvencible());
+    }
+
+    public void setConexion(Connection<Bundle> conexion) {
+        this.conexion = conexion;
+    }
+
+    public Connection<Bundle> getConexion() {
+        return conexion;
     }
 }
