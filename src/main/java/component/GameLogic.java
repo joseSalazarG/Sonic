@@ -55,14 +55,6 @@ public class GameLogic extends Component implements Serializable {
         addUINode(textoPapel, 20, 80);
     }
 
-    public static void SyncPos(@Nullable Player player) {
-        Bundle bundle = new Bundle("syncPos");
-        bundle.put("x", player.getPosition().getX());
-        bundle.put("y", player.getPosition().getY());
-        bundle.put("tipo", player.getTipo());
-        player.getConexion().send(bundle);
-    }
-
     public static void imprimir(String titulo) {
         System.out.println(titulo);
     }

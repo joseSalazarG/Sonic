@@ -6,6 +6,9 @@ import com.almasb.fxgl.net.Connection;
 
 import java.io.Serializable;
 
+/**.
+ * Todo los metodos para enviar mensajes se encuentran aquí.
+ */
 public class MultiplayerLogic implements Serializable {
 
 

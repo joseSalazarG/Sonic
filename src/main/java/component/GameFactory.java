@@ -21,6 +21,12 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.Spawns;
 import GameSettings.Player;
 
+/**
+ * GameFactory define los tipos de entidades que se pueden crear en el juego.
+ * Cada tipo de entidad tiene su propio metodo de creacion que se invoca
+ * al momento de instanciar una entidad en el juego.
+ */
+
 public class GameFactory implements EntityFactory {
     
 
