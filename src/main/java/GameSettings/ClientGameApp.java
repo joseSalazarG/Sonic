@@ -386,6 +386,10 @@ public class ClientGameApp extends GameApplication {
         });
     }
 
+    /**
+     * Cada frame se envia la posicion del jugador al servidor para sincronizar
+     * @param tpf time per frame
+     */
     @Override
     protected void onUpdate(double tpf) {
         if (conexion != null && player != null) {
@@ -395,6 +399,9 @@ public class ClientGameApp extends GameApplication {
         }
     }
             
+    /**
+     * Cuando detecta una tecla presionada, se ejecuta una accion
+     */
     @Override
     protected void initInput() {
         getInput().addAction(new UserAction("Mover a la izquierda") {
@@ -471,7 +478,10 @@ public class ClientGameApp extends GameApplication {
         //GameLogic.agregarTexto("Vidas: 3", "green", 24, 700, 50);
     }
 
-   @Override
+    /**
+     * Inicializa la colision entre entidades.
+     */
+    @Override
     protected void initPhysics() {
 
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.RING, (tu, ring) -> {
@@ -562,12 +572,22 @@ public class ClientGameApp extends GameApplication {
         });
     }
 
+    /**
+     * Cuando el jugador recoge basura, se envia un mensaje al servidor para que lo elimine
+     * @param player El jugador que recoge la basura
+     * @param basuraEntidad La entidad de la basura
+     */
     private void recogerBasura(Player player, Entity basuraEntidad) {
         String basuraId = basuraEntidad.getProperties().getString("id");
         String tipo = player.getTipo();
         MultiplayerLogic.recogerBasura(clientID, basuraId, tipo, conexion);
     }
 
+    /**
+     * Si el jugador tiene anillos, los pierde y se activa la invencibilidad
+     * Si no tiene anillos, pierde una vida y se activa la invencibilidad
+     * Si el jugador se queda sin vidas, se termina el juego
+     */
     private void perderVidas() {
         if (player.isInvencible()){
             return;

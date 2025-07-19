@@ -28,6 +28,9 @@ public class GameLogic extends Component implements Serializable {
     private Text textoBasura;
     private Text textoPapel;
 
+    /**
+     * Inicializa los textos que se mostrarán en la interfaz del juego.
+     */
     public GameLogic() {
         textoCaucho = new Text("Caucho: 0");
         textoCaucho.setStyle("-fx-font-size: 24px; -fx-fill: red;");
@@ -81,6 +84,11 @@ public class GameLogic extends Component implements Serializable {
         getGameScene().getRoot().getChildren().add(progressBar);
     }
 
+    /**
+     * Aplica un filtro de color a la pantalla del juego.
+     *
+     * @param num Un valor entre 0 y 1 que determina el grado del filtro de color.
+     */
     public static void filtroColor(float num) {
         //0.15 es el maximo
         ColorAdjust filtro = new ColorAdjust();
@@ -136,6 +144,12 @@ public class GameLogic extends Component implements Serializable {
         textoPapel.setText("Papel: 0");
     }
 
+    /**
+     * Activa la invencibilidad del jugador despues de ser golpeado por un enemigo.
+     *
+     * @param milisegundos Duración de la invencibilidad en milisegundos.
+     * @param player       El jugador al que se le activará la invencibilidad.
+     */
     public static void activarInvencibilidad(int milisegundos, Player player) {
         player.setInvencibilidad(true);
 
@@ -150,12 +164,18 @@ public class GameLogic extends Component implements Serializable {
         }, Duration.millis(milisegundos));
     }
 
+    /**
+     * Muestra un mensaje de victoria y cierra el juego.
+     */
     public static void Ganaste() {
         getDialogService().showMessageBox("You Win!", () -> {
             FXGL.getGameController().exit();
         });
     }
 
+    /**
+     * Muestra un mensaje de derrota y cierra el juego.
+     */
     public static void gameOver() {
         getDialogService().showMessageBox("Game Over", () -> {
             FXGL.getGameController().exit();

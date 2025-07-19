@@ -28,6 +28,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Esta es la clase principal del servidor del juego.
+ * Se encarga de manejar las conexiones de los clientes,
+ * la logica del juego y de sincronizar las pantallas de los jugadores.
+ */
 public class ServerGameApp extends GameApplication implements Serializable{
     private final int anchoPantalla = 800;
     private final int altoPantalla = 500;
@@ -51,7 +56,13 @@ public class ServerGameApp extends GameApplication implements Serializable{
         gameSettings.addEngineService(MultiplayerService.class);
     }
 
-   @Override
+    /**
+     * Inicializa el juego creando un servidor TCP en el puerto 55555,
+     * se puede cambiar el puerto modificando el numero.
+     * Cuando un cliente se conecta, se le asigna un id unico y se genera un hilo
+     * aparte para manejar los mensajes de ese cliente.
+     */
+    @Override
     protected void initGame() {
         server = getNetService().newTCPServer(55555);
         server.setOnConnected(conn -> {
@@ -68,10 +79,13 @@ public class ServerGameApp extends GameApplication implements Serializable{
         
     }
 
+    /**
+     * Inicia el juego, agregando el GameLogic donde se maneja la logica del juego, crea el mapa
+     * y spawnea los objetos necesarios.
+     */
     private void Jugar(){
         getGameWorld().addEntityFactory(new GameFactory());
         Level level = setLevelFromMap("mapazo.tmx");
-       
 
         // Spawnea todos los anillos en el servidor
         for (int[] pos : posicionesRings) {
@@ -105,6 +119,9 @@ public class ServerGameApp extends GameApplication implements Serializable{
 
     }
 
+    /**
+     * Este metodo se encarga de verificar si se deben activar eventos especiales
+     */
     private void verificarEventoBasura() {
         int cantidadRestante = basuras.size();
 
@@ -137,6 +154,12 @@ public class ServerGameApp extends GameApplication implements Serializable{
         }
     }
 
+    /**
+     * Este metodo se encarga de manejar los mensajes que llegan del servidor.
+     * Dependiendo del mensaje realiza una accion distinta.
+     *
+     * @param connection La conexion del cliente al servidor.
+     */
     public void onServer(Connection<Bundle> connection) {
         connection.addMessageHandlerFX((conn, bundle) -> {
             switch (bundle.getName()) {
@@ -390,6 +413,10 @@ public class ServerGameApp extends GameApplication implements Serializable{
         });
     }
 
+    /**
+     * Cada frames se actualiza la posicion de los robots y Eggman
+     * @param tpf time per frame
+     */
     @Override
     protected void onUpdate(double tpf) {
         super.onUpdate(tpf);
