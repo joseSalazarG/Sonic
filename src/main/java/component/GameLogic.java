@@ -17,7 +17,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Serializable;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
-import static com.almasb.fxgl.dsl.FXGL.getGameTimer;
 
 public class GameLogic extends Component implements Serializable {
 
@@ -45,11 +44,11 @@ public class GameLogic extends Component implements Serializable {
         textoPapel.setStyle("-fx-font-size: 24px; -fx-fill: white;");
         textoPapel.setFont(Font.font("Impact", 24));
 
-        addUINode(textoCaucho, 20, 110);
         addUINode(textoAnillos, 20, 20);
-        addUINode(textoVidas, 700, 50);
-        addUINode(textoBasura, 20, 50);
-        addUINode(textoPapel, 20, 80);
+        addUINode(textoBasura, 140, 20);
+        addUINode(textoPapel, 240, 20);
+        addUINode(textoCaucho, 330, 20);
+        addUINode(textoVidas, 20, 75);
     }
 
     public static void SyncPos(@Nullable Player player) {
@@ -99,7 +98,7 @@ public class GameLogic extends Component implements Serializable {
         Text texto = new Text("Basura restante: 0");
         texto.setStyle("-fx-font-size: 24px; -fx-fill: white;");
         texto.setFont(Font.font("Impact", 24));
-        addUINode(texto, 700, 20);
+        addUINode(texto, 770, 20);
         return texto;
     }
 
@@ -150,11 +149,22 @@ public class GameLogic extends Component implements Serializable {
         }, Duration.millis(milisegundos));
     }
 
-    public static void Ganaste() {
-        getDialogService().showMessageBox("You Win!", () -> {
+    public static void Ganaste(int anillos, int basura, int papel, int caucho, int robots) {
+        String mensaje = String.format(
+            "¡Ganaste!\n\nEstadisticas:\n" +
+            "- Anillos: %d\n" +
+            "- Basura: %d\n" +
+            "- Papel: %d\n" +
+            "- Caucho: %d\n" +
+            "- Robots destruidos: %d",
+            anillos, basura, papel, caucho, robots
+        );
+
+        getDialogService().showMessageBox(mensaje, () -> {
             FXGL.getGameController().exit();
         });
     }
+
 
     public static void gameOver() {
         getDialogService().showMessageBox("Game Over", () -> {

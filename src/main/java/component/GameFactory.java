@@ -3,6 +3,7 @@ package component;
 import com.almasb.fxgl.dsl.views.ScrollingBackgroundView;
 import com.almasb.fxgl.entity.components.CollidableComponent;
 import com.almasb.fxgl.entity.components.IrremovableComponent;
+import com.almasb.fxgl.multiplayer.NetworkComponent;
 import com.almasb.fxgl.entity.EntityFactory;
 import static com.almasb.fxgl.dsl.FXGL.*;
 import java.util.UUID;
@@ -17,6 +18,10 @@ import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.Spawns;
 import GameSettings.Player;
