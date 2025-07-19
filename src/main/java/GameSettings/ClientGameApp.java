@@ -378,6 +378,10 @@ public class ClientGameApp extends GameApplication {
                     }
                     break;
                 }
+
+                case "Si puedes transformarte": {
+                    player.transformarSuperSonic();
+                }
             }
         });
     }
@@ -443,7 +447,7 @@ public class ClientGameApp extends GameApplication {
             @Override
             protected void onActionBegin() {
                 if (player == null) return;
-                player.transformarSuperSonic();
+                MultiplayerLogic.enviarMensaje("Puedo transformarme", conexion);
             }
         }, KeyCode.P);
 

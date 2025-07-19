@@ -39,6 +39,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
     private Map<String, Entity> robots = new HashMap<>();
     private Map<String, Entity> eggmanBoss = new HashMap<>();
     private Map<String, Entity> esmeraldas = new HashMap<>();
+    private int contadorEsmeraldas = 0;
     private int totalBasura = 0;
     private Set<Integer> eventosDisparados = new HashSet<>();
 
@@ -309,7 +310,8 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     Entity esmeralda = esmeraldas.get(esmeraldaId);
 
                     if (esmeralda != null) {
-                        esmeralda.removeFromWorld();     
+                        esmeralda.removeFromWorld();
+                        contadorEsmeraldas++;
                         //esmeraldas.remove(esmeraldaId);   
                     }
 
@@ -318,6 +320,13 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     esmeraldaRecogida.put("esmeraldaId", esmeraldaId);
                     server.broadcast(esmeraldaRecogida);
 
+                    break;
+                }
+
+                case "Puedo transformarme": {
+                    if (contadorEsmeraldas >= 7) {
+                        server.broadcast(new Bundle("Si puedes transformarte"));
+                    }
                     break;
                 }
 
