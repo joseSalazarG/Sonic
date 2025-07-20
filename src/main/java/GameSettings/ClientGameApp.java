@@ -1,9 +1,17 @@
 package GameSettings;
 
+import com.almasb.fxgl.animation.Animation;
+import com.almasb.fxgl.animation.Interpolators;
+import com.almasb.fxgl.app.scene.FXGLMenu;
+import com.almasb.fxgl.app.scene.MenuType;
+import com.almasb.fxgl.app.scene.SceneFactory;
 import com.almasb.fxgl.audio.Music;
+import com.almasb.fxgl.core.util.EmptyRunnable;
+import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.input.virtual.VirtualButton;
+import com.almasb.fxgl.localization.Language;
 import com.almasb.fxgl.multiplayer.MultiplayerService;
 import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.app.GameApplication;
@@ -12,11 +20,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.almasb.fxgl.ui.FontType;
 import component.GameLogic;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import component.MultiplayerLogic;
+import javafx.beans.binding.Bindings;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
@@ -26,6 +38,9 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.stage.Stage;
 import component.GameFactory;
 import component.Personajes.KnucklesComponent;
@@ -33,6 +48,7 @@ import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
 import javafx.scene.text.Text;
 import javafx.scene.Scene;
+import javafx.util.Duration;
 
 public class ClientGameApp extends GameApplication {
 
@@ -55,8 +71,15 @@ public class ClientGameApp extends GameApplication {
     protected void initSettings(GameSettings gameSettings) {
         gameSettings.setWidth(anchoPantalla);
         gameSettings.setHeight(altoPantalla);
-        gameSettings.setTitle("Jugador Sonic");
+        gameSettings.setTitle("J-Sonic");
+        gameSettings.setAppIcon("icono.png");
         gameSettings.addEngineService(MultiplayerService.class);
+        gameSettings.setFontUI("SegaSonic.ttf");
+        // una tiene que servir
+        gameSettings.setFontGame("SegaSonic.ttf");
+        gameSettings.setFontMono("SegaSonic.ttf");
+        gameSettings.setFontText("SegaSonic.ttf");
+        gameSettings.setVersion("0.1");
     }
 
     @Override
@@ -68,7 +91,6 @@ public class ClientGameApp extends GameApplication {
         // Fixme: cambiar la musica, ya no me gusta esta
         //getAudioPlayer().loopMusic(music);
         gameLogic = new GameLogic();
-        gameLogic.init();
     }
 
     // Todo: puedo pasar esta pantalla a su respectiva clase
@@ -148,7 +170,7 @@ public class ClientGameApp extends GameApplication {
                     String quienRecogioAnillo = bundle.get("playerId");
                     if (quienRecogioAnillo.equals(clientID)) {
                         contadorAnillos++;
-                        gameLogic.cambiarTextoAnillos("anillos: " + contadorAnillos);
+                        GameLogic.setAnillos("Anillos: " + contadorAnillos);
                     }
                     break;
                 }
@@ -185,15 +207,15 @@ public class ClientGameApp extends GameApplication {
                                 switch (tipoBasura) {
                                     case "papel":
                                         contadorPapel++;
-                                        gameLogic.cambiarTextoPapel("Papel: " + contadorPapel);
+                                        GameLogic.setPapel("Papel: " + contadorPapel);
                                         break;
                                     case "caucho":
                                         contadorCaucho++;
-                                        gameLogic.cambiarTextoCaucho("Caucho: " + contadorCaucho);
+                                        GameLogic.setCaucho("Caucho: " + contadorCaucho);
                                         break;
                                     case "basura":
                                         contadorBasura++;
-                                        gameLogic.cambiarTextoBasura("Basura: " + contadorBasura);
+                                        GameLogic.setBasura("Basura: " + contadorBasura);
                                         break;
                                 }
                             }
@@ -275,6 +297,7 @@ public class ClientGameApp extends GameApplication {
                             remotePlayer.setY(y);
                         }
                     }
+                    GameLogic.actualizarUI();
                     break;
                 }
 
@@ -288,6 +311,7 @@ public class ClientGameApp extends GameApplication {
                 }
 
                 case "EliminarEsmeralda": {
+                    FXGL.getNotificationService().pushNotification("HAS ENCONTRADO UNA ESMERALDA");
                     String esmeraldaID = bundle.get("esmeraldaId");
 
                     getGameWorld().getEntitiesByType(GameFactory.EntityType.ESMERALDA).stream()
@@ -473,24 +497,7 @@ public class ClientGameApp extends GameApplication {
     @Override
     protected void initUI() {
         //fixme: no funciona la fuente personalizada
-        ImageView botonAyuda = new ImageView("assets/textures/Escenario/boton_ayuda.png");
-        botonAyuda.setFitWidth(50);
-        botonAyuda.setFitHeight(50);
-        botonAyuda.setFitHeight(50);
-        botonAyuda.setTranslateX(850);
-        botonAyuda.setTranslateY(30);
 
-        botonAyuda.setOnMouseClicked(e -> {
-            System.out.println("Ayuda");
-            Alert alert = new Alert(AlertType.INFORMATION,
-                    "Escribe aqui las reglas",
-                    ButtonType.CLOSE);
-            alert.setTitle("Mensaje de Ayuda");
-            alert.setHeaderText("REGLAS");
-            alert.showAndWait();
-        });
-
-        getGameScene().addUINode(botonAyuda);
     }
 
     /**
@@ -590,6 +597,12 @@ public class ClientGameApp extends GameApplication {
         });
     }
 
+    @Override
+    protected void initGameVars(Map<String, Object> vars) {
+        // this creates an observable integer variable with value 3
+        vars.put("lives", 3);
+    }
+
     /**
      * Cuando el jugador recoge basura, se envia un mensaje al servidor para que lo elimine
      * @param player El jugador que recoge la basura
@@ -616,14 +629,14 @@ public class ClientGameApp extends GameApplication {
         if (contadorAnillos > 0) {
             play("perder_anillos.wav");
             contadorAnillos = 0;
-            gameLogic.cambiarTextoAnillos("Anillos: " + contadorAnillos);
+            GameLogic.setAnillos("Anillos: " + contadorAnillos);
             GameLogic.activarInvencibilidad(3000, player);
             return;
         }
 
         play("muerte.wav");
         player.restarVida();
-        gameLogic.cambiarTextoVidas("Vidas: " + player.getVidas());
+        GameLogic.setVidas("Vidas: " + player.getVidas());
         if (player.estaMuerto()) {
             GameLogic.gameOver();
         } else {

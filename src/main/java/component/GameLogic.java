@@ -7,8 +7,11 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.net.Connection;
 import com.almasb.fxgl.time.TimerAction;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.effect.ColorAdjust;
+import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
@@ -28,35 +31,45 @@ public class GameLogic extends Component implements Serializable {
     private Text textoBasura;
     private Text textoPapel;
 
-    /**
-     * Inicializa los textos que se mostrarán en la interfaz del juego.
-     */
-    public GameLogic() {
-        textoCaucho = new Text("Caucho: 0");
-        textoCaucho.setStyle("-fx-font-size: 24px; -fx-fill: red;");
-        textoCaucho.setFont(Font.font("Impact", 24));
-        textoAnillos = new Text("Anillos: 0");
-        textoAnillos.setStyle("-fx-font-size: 24px; -fx-fill: yellow;");
-        textoAnillos.setFont(Font.font("Impact", 24));
-        textoVidas = new Text("Vidas: 3");
-        textoVidas.setStyle("-fx-font-size: 24px; -fx-fill: green;");
-        textoVidas.setFont(Font.font("Impact", 24));
-        textoBasura = new Text("Basura: 0");
-        textoBasura.setStyle("-fx-font-size: 24px; -fx-fill: blue;");
-        textoBasura.setFont(Font.font("Impact", 24));
-        textoPapel = new Text("Papel: 0");
-        textoPapel.setStyle("-fx-font-size: 24px; -fx-fill: white;");
-        textoPapel.setFont(Font.font("Impact", 24));
-
-        addUINode(textoAnillos, 20, 20);
-        addUINode(textoBasura, 140, 20);
-        addUINode(textoPapel, 240, 20);
-        addUINode(textoCaucho, 330, 20);
-        addUINode(textoVidas, 20, 75);
-    }
+    private static String caucho = "Cauchos: 0";
+    private static String anillos = "Anillos: 0";
+    private static String vidas = "Vidas: 3";
+    private static String basura = "Basura: 0";
+    private static String papel = "Papel: 0";
 
     public static void imprimir(String titulo) {
         System.out.println(titulo);
+    }
+
+    public static void actualizarUI() {
+        getGameScene().clearUINodes();
+        addText(anillos, 20, 20);
+        addText(basura, 180, 20);
+        addText(papel, 350, 20);
+        addText(caucho, 500, 20);
+        addText(vidas, 20, 75);
+        botonAyuda();
+    }
+
+    private static void botonAyuda() {
+        ImageView botonAyuda = new ImageView("assets/textures/Escenario/boton_ayuda.png");
+        botonAyuda.setFitWidth(50);
+        botonAyuda.setFitHeight(50);
+        botonAyuda.setFitHeight(50);
+        botonAyuda.setTranslateX(850);
+        botonAyuda.setTranslateY(30);
+
+        botonAyuda.setOnMouseClicked(e -> {
+            System.out.println("Ayuda");
+            Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                    "Escribe aqui las reglas",
+                    ButtonType.CLOSE);
+            alert.setTitle("Mensaje de Ayuda");
+            alert.setHeaderText("REGLAS");
+            alert.showAndWait();
+        });
+
+        getGameScene().addUINode(botonAyuda);
     }
 
     public static void agregarBarra(float num) {
@@ -107,33 +120,34 @@ public class GameLogic extends Component implements Serializable {
         textoBasuraGlobal.setText(mensaje);
     }
 
-    public void cambiarTextoAnillos(String mensaje) {
-        textoAnillos.setText(mensaje);
+    public static void setAnillos(String mensaje) {
+        anillos = mensaje;
+        actualizarUI();
     }
 
-    public void cambiarTextoCaucho(String mensaje) {
-        textoCaucho.setText(mensaje);
+    public static void setBasura(String mensaje) {
+        basura = mensaje;
+        actualizarUI();
     }
 
-    public void cambiarTextoVidas(String mensaje) {
-        textoVidas.setText(mensaje);
+    public static void setPapel(String mensaje) {
+        papel = mensaje;
+        actualizarUI();
     }
 
-    public void cambiarTextoBasura(String mensaje) {
-        textoBasura.setText(mensaje);
+    public static void setCaucho(String mensaje) {
+        caucho = mensaje;
+        actualizarUI();
     }
 
-    public void cambiarTextoPapel(String mensaje) {
-        textoPapel.setText(mensaje);
+    public static void setVidas(String mensaje) {
+        vidas = mensaje;
+        actualizarUI();
     }
 
-    public void init() {
-        // Inicialización de la lógica del juego
-        textoCaucho.setText("Caucho: 0");
-        textoAnillos.setText("Anillos: 0");
-        textoVidas.setText("Vidas: 3");
-        textoBasura.setText("Basura: 0");
-        textoPapel.setText("Papel: 0");
+    public static void fxglAgregarTexto(String mensaje) {
+        FXGL.getGameScene().clearUINodes();
+        addText(mensaje, 140, 20);
     }
 
     /**
