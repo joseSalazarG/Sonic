@@ -21,6 +21,10 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import component.GameFactory;
@@ -43,9 +47,9 @@ public class ClientGameApp extends GameApplication {
     private int contadorPapel = 0;
     private int contadorCaucho = 0;
     private boolean flag_Interactuar = false;
-    private Entity stand_by;
     public GameLogic gameLogic;
     public String clientID;
+    private int contadorRobot = 0;
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -159,7 +163,7 @@ public class ClientGameApp extends GameApplication {
                 }
 
                 case "EggmanEliminado": {
-                    GameLogic.Ganaste();
+                    GameLogic.Ganaste(contadorAnillos, contadorBasura, contadorPapel, contadorCaucho, contadorRobot);
                     break;
                 }
 
@@ -469,13 +473,24 @@ public class ClientGameApp extends GameApplication {
     @Override
     protected void initUI() {
         //fixme: no funciona la fuente personalizada
-        //Font fuente = getAssetLoader().load(AssetType.FONT,"SegaSonic.ttf");
-        //GameLogic.agregarTexto("Anillos: 0", "yellow", 24, 20, 20);
-        //GameLogic.agregarTexto("Basura: 0", "blue", 24, 20, 50);
-        //GameLogic.agregarTexto("Papel: 0", "white", 24, 20, 80);
-        //GameLogic.agregarTexto("Caucho: 0", "red", 24, 20, 110);
-        //GameLogic.agregarTexto("Basura restante: 0", "orange", 24, 700, 20);
-        //GameLogic.agregarTexto("Vidas: 3", "green", 24, 700, 50);
+        ImageView botonAyuda = new ImageView("assets/textures/Escenario/boton_ayuda.png");
+        botonAyuda.setFitWidth(50);
+        botonAyuda.setFitHeight(50);
+        botonAyuda.setFitHeight(50);
+        botonAyuda.setTranslateX(850);
+        botonAyuda.setTranslateY(30);
+
+        botonAyuda.setOnMouseClicked(e -> {
+            System.out.println("Ayuda");
+            Alert alert = new Alert(AlertType.INFORMATION,
+                    "Escribe aqui las reglas",
+                    ButtonType.CLOSE);
+            alert.setTitle("Mensaje de Ayuda");
+            alert.setHeaderText("REGLAS");
+            alert.showAndWait();
+        });
+
+        getGameScene().addUINode(botonAyuda);
     }
 
     /**
@@ -514,7 +529,7 @@ public class ClientGameApp extends GameApplication {
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.CAUCHO, (player, caucho) -> {
             if (player.hasComponent(KnucklesComponent.class)) {
                 flag_Interactuar = true;
-                stand_by = caucho; // Guarda la entidad caucho para interactuar
+                //stand_by = caucho; // Guarda la entidad caucho para interactuar
             }
         });
 
@@ -549,6 +564,9 @@ public class ClientGameApp extends GameApplication {
                eliminar.put("playerId", clientID);
                conexion.send(eliminar);
                tu.getComponent(PhysicsComponent.class).setVelocityY(-300);
+               if (((Player) tu).equals(player)) {
+                    contadorRobot++;
+               }
             } else {
                 perderVidas();
             }

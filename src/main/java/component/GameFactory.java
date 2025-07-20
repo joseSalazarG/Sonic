@@ -20,6 +20,10 @@ import javafx.geometry.Point2D;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.Spawns;
 import GameSettings.Player;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import com.almasb.fxgl.multiplayer.NetworkComponent;
 
 /**
  * GameFactory define los tipos de entidades que se pueden crear en el juego.
