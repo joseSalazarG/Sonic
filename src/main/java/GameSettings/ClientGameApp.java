@@ -45,7 +45,6 @@ public class ClientGameApp extends GameApplication {
     private int contadorPapel = 0;
     private int contadorCaucho = 0;
     private boolean flag_Interactuar = false;
-    public GameLogic gameLogic;
     public String clientID;
     private int contadorRobot = 0;
 
@@ -214,6 +213,15 @@ public class ClientGameApp extends GameApplication {
                                 }
                             }
                         });
+                    break;
+                }
+
+                case "Cantidad Basura Total": {
+                    int total = bundle.get("total");
+                    int restante = bundle.get("restante");
+
+                    GameLogic.agregarBarra((float) restante / total);
+                    GameLogic.filtroColor((float) restante / total); // Cambia el tono
                     break;
                 }
 

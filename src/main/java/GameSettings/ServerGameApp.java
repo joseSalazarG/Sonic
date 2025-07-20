@@ -265,7 +265,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
                         conn.send(crearRobot);
                     }
 
-                    Bundle estadoBasura = new Bundle("EstadoBasuraGlobal");
+                    Bundle estadoBasura = new Bundle("Cantidad Basura Total");
                     estadoBasura.put("total", totalBasura);
                     estadoBasura.put("restante", basuras.size());
                     conn.send(estadoBasura);
@@ -375,7 +375,7 @@ public class ServerGameApp extends GameApplication implements Serializable{
                         basuras.remove(trashId);
                         verificarEventoBasura();
 
-                        Bundle estadoActualizado = new Bundle("EstadoBasuraGlobal");
+                        Bundle estadoActualizado = new Bundle("Cantidad Basura Total");
                         estadoActualizado.put("total", totalBasura);
                         estadoActualizado.put("restante", basuras.size());
                         server.broadcast(estadoActualizado);
