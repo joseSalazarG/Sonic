@@ -416,16 +416,33 @@ public class ClientGameApp extends GameApplication {
      */
     @Override
     protected void initInput() {
+        // ESTA FEO PERO FUNCIONA LA SINCRONIZACION, si uso los metodos de MultiplayerLogic se pierde la sincronizacion
         getInput().addAction(new UserAction("Mover a la izquierda") {
             @Override
             protected void onAction() {
                 if (player == null) return;
-                MultiplayerLogic.moverIzquierda(clientID, player, conexion);
+                Bundle bundle = new Bundle("Mover a la izquierda");
+                bundle.put("id", clientID);
+                conexion.send(bundle);
+                player.moverIzquierda();
+                Bundle sync = new Bundle("SyncPos");
+                sync.put("id", clientID);
+                sync.put("x", player.getX());
+                sync.put("y", player.getY());
+                conexion.send(sync);
             }
             @Override
             protected void onActionEnd() {
                 if (player == null) return;
-                MultiplayerLogic.detenerMovimiento(clientID, player, conexion);
+                Bundle bundle = new Bundle("Detente");
+                bundle.put("id", clientID);
+                conexion.send(bundle);
+                player.detener();
+                Bundle sync = new Bundle("SyncPos");
+                sync.put("id", clientID);
+                sync.put("x", player.getX());
+                sync.put("y", player.getY());
+                conexion.send(sync);
             }
         }, KeyCode.A, VirtualButton.LEFT);
 
@@ -433,12 +450,28 @@ public class ClientGameApp extends GameApplication {
             @Override
             protected void onAction() {
                 if (player == null) return;
-                MultiplayerLogic.moverDerecha(clientID, player, conexion);
+                Bundle bundle = new Bundle("Mover a la derecha");
+                bundle.put("id", clientID);
+                conexion.send(bundle);
+                player.moverDerecha();
+                Bundle sync = new Bundle("SyncPos");
+                sync.put("id", clientID);
+                sync.put("x", player.getX());
+                sync.put("y", player.getY());
+                conexion.send(sync);
             }
             @Override
             protected void onActionEnd() {
                 if (player == null) return;
-                MultiplayerLogic.detenerMovimiento(clientID, player, conexion);
+                Bundle bundle = new Bundle("Detente");
+                bundle.put("id", clientID);
+                conexion.send(bundle);
+                player.detener();
+                Bundle sync = new Bundle("SyncPos");
+                sync.put("id", clientID);
+                sync.put("x", player.getX());
+                sync.put("y", player.getY());
+                conexion.send(sync);
             }
         }, KeyCode.D, VirtualButton.RIGHT);
 
@@ -446,7 +479,15 @@ public class ClientGameApp extends GameApplication {
             @Override
             protected void onActionBegin() {
                 if (player == null) return;
-                MultiplayerLogic.saltar(clientID, player, conexion);
+                Bundle bundle = new Bundle("Saltar");
+                bundle.put("id", clientID);
+                conexion.send(bundle);
+                player.saltar();
+                Bundle sync = new Bundle("SyncPos");
+                sync.put("id", clientID);
+                sync.put("x", player.getX());
+                sync.put("y", player.getY());
+                conexion.send(sync);
             }
         }, KeyCode.W, VirtualButton.A);
 

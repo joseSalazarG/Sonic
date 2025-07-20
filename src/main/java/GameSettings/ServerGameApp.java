@@ -159,15 +159,12 @@ public class ServerGameApp extends GameApplication implements Serializable{
                 case "Mover a la izquierda":
                 case "Mover a la derecha":
                 case "Saltar":
-                case "Detente":
-                    for (Connection<Bundle> c : conexiones) {
-                        if (c != conn) {
-                            c.send(bundle);
-                        }
-                    }
+                case "Detente": {
+                    server.broadcast(bundle);
                     break;
+                }
 
-                case "SyncPos":
+                case "SyncPos": {
                     String syncId = bundle.get("id");
                     for (Bundle personaje : personajesExistentes) {
                         Object personajeId = personaje.get("id");
@@ -183,15 +180,16 @@ public class ServerGameApp extends GameApplication implements Serializable{
                         }
                     }
                     break;
+                }
 
                 case "SolicitarCrearPersonaje": {
                     String id = bundle.get("id");
                     String tipo = bundle.get("tipo");
 
                     Bundle personajeExistente = personajesExistentes.stream()
-                        .filter(p -> p.get("id").equals(id))
-                        .findFirst()
-                        .orElse(null);
+                            .filter(p -> p.get("id").equals(id))
+                            .findFirst()
+                            .orElse(null);
 
                     double x = 50, y = 150;
                     if (personajeExistente == null) {

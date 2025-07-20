@@ -42,10 +42,10 @@ public class MultiplayerLogic implements Serializable {
     }
 
     public static void detenerMovimiento(String clientID, Player player, Connection<Bundle> conexion) {
+        player.detener();
         Bundle bundle = new Bundle("Detener movimiento");
         bundle.put("id", clientID);
         conexion.send(bundle);
-        player.detener();
         sincronizarPosiciones(clientID, player.getX(), player.getY(), conexion);
     }
 
