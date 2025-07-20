@@ -13,7 +13,7 @@ import java.util.List;
 public class EsmeraldaComponent extends Component {
 
     // Lista de colores de las esmeraldas
-     ArrayList<String> colores = new ArrayList<>(Arrays.asList("amarilla", "azul", "cyan", "gris", "morada", "roja", "verde"));
+     static final ArrayList<String> colores = new ArrayList<>(Arrays.asList("amarilla", "azul", "cyan", "gris", "morada", "roja", "verde"));
 
     @Override
     public void onAdded() {

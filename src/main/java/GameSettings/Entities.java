@@ -36,7 +36,10 @@ public class Entities {
         new int[]{848, 260},
         new int[]{948, 290},
         new int[]{1048, 320},
-        new int[]{1148, 350}
+        new int[]{1148, 350},
+        new int[]{1248, 380},
+        new int[]{1348, 410},
+        new int[]{1448, 440}
         // mas robots
     );
 

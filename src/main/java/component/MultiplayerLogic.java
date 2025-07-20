@@ -1,6 +1,7 @@
 package component;
 
 import GameSettings.Player;
+import com.almasb.fxgl.core.collection.PropertyMap;
 import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.net.Connection;
 
@@ -100,5 +101,8 @@ public class MultiplayerLogic implements Serializable {
         conexion.send(recoger);
     }
 
+    public static void solicitarVariables(Connection<Bundle> conexion) {
+        enviarMensaje("SolicitandoVariables", conexion);
+    }
 
 }

@@ -6,7 +6,6 @@ import com.almasb.fxgl.entity.level.Level;
 import com.almasb.fxgl.multiplayer.MultiplayerService;
 import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.app.GameApplication;
-
 import static GameSettings.Entities.posicionesBasura;
 import static GameSettings.Entities.posicionesRings;
 import static GameSettings.Entities.posicionesRobots;
@@ -14,11 +13,7 @@ import static com.almasb.fxgl.dsl.FXGL.*;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
 import component.GameFactory;
-import component.Personajes.PlayerComponent;
-import component.Personajes.SonicComponent;
-import component.GameLogic;
 import component.Enemigos.EggmanComponent;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,9 +39,8 @@ public class ServerGameApp extends GameApplication implements Serializable{
     private Map<String, Entity> robots = new HashMap<>();
     private Map<String, Entity> eggmanBoss = new HashMap<>();
     private Map<String, Entity> esmeraldas = new HashMap<>();
-    private int contadorEsmeraldas = 0;
-    private int totalBasura = 0;
     private Set<Integer> eventosDisparados = new HashSet<>();
+    private int totalBasura = 0;
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -116,7 +110,6 @@ public class ServerGameApp extends GameApplication implements Serializable{
             basuras.put(id, basuraEntidad);
         }
         totalBasura = basuras.size();
-
     }
 
     /**
@@ -328,31 +321,22 @@ public class ServerGameApp extends GameApplication implements Serializable{
                 }
 
                 case "RecogerEsmeralda": {
-                    String playerId = bundle.get("playerId");
                     String esmeraldaId = bundle.get("esmeraldaId");
                     Entity esmeralda = esmeraldas.get(esmeraldaId);
-
                     if (esmeralda != null) {
                         esmeralda.removeFromWorld();
-                        contadorEsmeraldas++;
-                        //esmeraldas.remove(esmeraldaId);   
+                        getWorldProperties().setValue("esmeraldas", getWorldProperties().getInt("esmeraldas") + 1);
+                    }
+
+                    if (getWorldProperties().getInt("esmeraldas") >= 7) {
+                        server.broadcast(new Bundle("Desbloquear Transformacion"));
                     }
 
                     Bundle esmeraldaRecogida = new Bundle("EliminarEsmeralda");
-                    esmeraldaRecogida.put("playerId", playerId);
                     esmeraldaRecogida.put("esmeraldaId", esmeraldaId);
                     server.broadcast(esmeraldaRecogida);
-
                     break;
                 }
-
-                case "Puedo transformarme": {
-                    if (contadorEsmeraldas >= 7) {
-                        server.broadcast(new Bundle("Si puedes transformarte"));
-                    }
-                    break;
-                }
-
 
                 case "atacarEggman": {
                     String eggmanId = bundle.get("eggmanId");
@@ -367,7 +351,6 @@ public class ServerGameApp extends GameApplication implements Serializable{
                             server.broadcast(eggmanEliminado);
                         }
                     }
-                    
                     break;
                 }
 
@@ -382,9 +365,9 @@ public class ServerGameApp extends GameApplication implements Serializable{
 
                         System.out.println("Intentando recoger basura. Jugador tipo: " + tipoJugador + ", Basura tipo: " + tipoBasura);
                         boolean puedeRecoger =
-                            tipoBasura.equals("basura") ||  // todos pueden recoger basura normal
-                            (tipoBasura.equals("caucho") && tipoJugador.equals("knuckles")) ||
-                            (tipoBasura.equals("papel") && tipoJugador.equals("tails"));
+                                tipoBasura.equals("basura")   // todos pueden recoger basura normal
+                                || (tipoBasura.equals("caucho") && tipoJugador.equals("knuckles"))
+                                || (tipoBasura.equals("papel") && tipoJugador.equals("tails"));
 
                         if (!puedeRecoger) {
                             System.out.println("No puede recoger basura: jugador " + tipoJugador + " con basura " + tipoBasura);
@@ -406,7 +389,6 @@ public class ServerGameApp extends GameApplication implements Serializable{
                     } else {
                         System.out.println("Basura con id " + trashId + " no encontrada.");
                     }
-
                     break;
                 }
             }
@@ -438,5 +420,17 @@ public class ServerGameApp extends GameApplication implements Serializable{
             posEggman.put("y", eggman.getY());
             server.broadcast(posEggman);
         }
+    }
+
+    @Override
+    protected void initGameVars(Map<String, Object> vars) {
+        vars.put("Anillos recogidos", 0);
+        vars.put("Basura recogida", 0);
+        vars.put("Papel reciclado", 0);
+        vars.put("Cauchos destruidos", 0);
+        vars.put("Enemigos eliminados", 0);
+        vars.put("esmeraldas", 0);
+        vars.put("transformacion", false);
+        // se puede agregar tambien el tiempo
     }
 }

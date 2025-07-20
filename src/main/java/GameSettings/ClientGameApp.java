@@ -1,46 +1,30 @@
 package GameSettings;
 
-import com.almasb.fxgl.animation.Animation;
-import com.almasb.fxgl.animation.Interpolators;
-import com.almasb.fxgl.app.scene.FXGLMenu;
-import com.almasb.fxgl.app.scene.MenuType;
-import com.almasb.fxgl.app.scene.SceneFactory;
+import com.almasb.fxgl.app.MenuItem;
 import com.almasb.fxgl.audio.Music;
-import com.almasb.fxgl.core.util.EmptyRunnable;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.input.UserAction;
 import com.almasb.fxgl.input.virtual.VirtualButton;
-import com.almasb.fxgl.localization.Language;
 import com.almasb.fxgl.multiplayer.MultiplayerService;
 import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.app.GameApplication;
 import static com.almasb.fxgl.dsl.FXGL.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-import com.almasb.fxgl.ui.FontType;
+import java.net.ConnectException;
+import java.util.*;
+
+import com.almasb.fxgl.ui.FXGLButton;
 import component.GameLogic;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import component.MultiplayerLogic;
-import javafx.beans.binding.Bindings;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
-import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
 import javafx.stage.Stage;
 import component.GameFactory;
 import component.Personajes.KnucklesComponent;
@@ -48,7 +32,6 @@ import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
 import javafx.scene.text.Text;
 import javafx.scene.Scene;
-import javafx.util.Duration;
 
 public class ClientGameApp extends GameApplication {
 
@@ -57,7 +40,6 @@ public class ClientGameApp extends GameApplication {
     private Connection<Bundle> conexion;
     private Map<String, Player> personajeRemotos = new HashMap<>();
     private Player player;
-    private String personajeSeleccionado = null;
     private int contadorAnillos = 0;
     private int contadorBasura = 0;
     private int contadorPapel = 0;
@@ -77,9 +59,21 @@ public class ClientGameApp extends GameApplication {
         gameSettings.setFontUI("SegaSonic.ttf");
         // una tiene que servir
         gameSettings.setFontGame("SegaSonic.ttf");
-        gameSettings.setFontMono("SegaSonic.ttf");
         gameSettings.setFontText("SegaSonic.ttf");
-        gameSettings.setVersion("0.1");
+        //
+        gameSettings.setVersion("0.4");
+        gameSettings.setMainMenuEnabled(true);
+        gameSettings.setEnabledMenuItems(EnumSet.of(MenuItem.EXTRA));
+        gameSettings.getCredits().addAll(Arrays.asList(
+                "Jose Luis      - Programador en jefe",
+                "DemoLinkle   - Programador",
+                "Jose Luis      - Artista",
+                "Jose Luis      - Disenador de niveles",
+                "Jose Luis      - Tester",
+                "DemoLinkle   - Tester",
+                "Jose Luis      - Productor",
+                "Jose Luis      - Director"
+        ));
     }
 
     @Override
@@ -90,36 +84,36 @@ public class ClientGameApp extends GameApplication {
         Music music = getAssetLoader().loadMusic("OST.mp3");
         // Fixme: cambiar la musica, ya no me gusta esta
         //getAudioPlayer().loopMusic(music);
-        gameLogic = new GameLogic();
     }
 
     // Todo: puedo pasar esta pantalla a su respectiva clase
     // Todo: quizas hacer que se pueda cambiar de personaje en cualquier momento si no estan los 3
-    // Todo: esta en javaFX, quizas pasarlo a FXGL
     private void menuDePersonaje() {
         getExecutor().startAsyncFX(() -> {
             Stage stage = new Stage();
             VBox root = new VBox(15);
             root.setAlignment(Pos.CENTER);
             Text title = new Text("Selecciona tu personaje");
-            Button btnSonic = new Button("Sonic");
-            Button btnTails = new Button("Tails");
-            Button btnKnuckles = new Button("Knuckles");
 
+            FXGLButton btnSonic = (FXGLButton) FXGL.getUIFactoryService().newButton("Sonic");
             btnSonic.setOnAction(e -> {
-                personajeSeleccionado = "sonic";
+                getWorldProperties().setValue("personaje", "sonic");
                 stage.close();
-                startNetworkAndGame();
+                Jugar();
             });
+
+            FXGLButton btnTails = (FXGLButton) FXGL.getUIFactoryService().newButton("Tails");
             btnTails.setOnAction(e -> {
-                personajeSeleccionado = "tails";
+                getWorldProperties().setValue("personaje", "tails");
                 stage.close();
-                startNetworkAndGame();
+                Jugar();
             });
+
+            FXGLButton btnKnuckles = (FXGLButton) FXGL.getUIFactoryService().newButton("Knuckles");
             btnKnuckles.setOnAction(e -> {
-                personajeSeleccionado = "knuckles";
+                getWorldProperties().setValue("personaje", "knuckles");
                 stage.close();
-                startNetworkAndGame();
+                Jugar();
             });
 
             root.getChildren().addAll(title, btnSonic, btnTails, btnKnuckles);
@@ -130,7 +124,7 @@ public class ClientGameApp extends GameApplication {
         });
     }
 
-    private void startNetworkAndGame() {
+    private void Jugar() {
         spawn("fondo");
         setLevelFromMap("mapazo.tmx");
         var client = getNetService().newTCPClient("localhost", 55555);
@@ -154,7 +148,7 @@ public class ClientGameApp extends GameApplication {
                 // 2. El servidor al recibir el mensaje "Hola" del cliente, le responde con "TuID"
                 case "TuID": {
                     clientID = bundle.get("id");
-                    MultiplayerLogic.solicitarCrearPersonaje(personajeSeleccionado, clientID, conexion);
+                    MultiplayerLogic.solicitarCrearPersonaje(getWorldProperties().getValue("personaje"), clientID, conexion);
                     // Envia posicion inicial para sincronizar servidor
                     MultiplayerLogic.sincronizarPosiciones(clientID, 50, 150, conexion);
                     break;
@@ -233,6 +227,7 @@ public class ClientGameApp extends GameApplication {
                 }
 
                 case "CrearEggman": {
+                    getNotificationService().pushNotification("¡Eggman ha aparecido!");
                     double x = ((Number) bundle.get("x")).doubleValue();
                     double y = ((Number) bundle.get("y")).doubleValue();
                     String id = bundle.get("id");
@@ -311,7 +306,6 @@ public class ClientGameApp extends GameApplication {
                 }
 
                 case "EliminarEsmeralda": {
-                    FXGL.getNotificationService().pushNotification("HAS ENCONTRADO UNA ESMERALDA");
                     String esmeraldaID = bundle.get("esmeraldaId");
 
                     getGameWorld().getEntitiesByType(GameFactory.EntityType.ESMERALDA).stream()
@@ -359,16 +353,6 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
-                case "EstadoBasuraGlobal": {
-                    int total = bundle.get("total");
-                    int restante = bundle.get("restante");
-
-                    GameLogic.agregarBarra((float) restante / total);
-                    GameLogic.filtroColor((float) restante / total); // Cambia el tono
-                    gameLogic.cambiarTextoBasuraGlobal("Basura restante: " + restante + "/" + total);
-                    break;
-                }
-
                 case "SpawnArbol": {
                     double x = ((Number) bundle.get("x")).doubleValue();
                     double y = ((Number) bundle.get("y")).doubleValue();
@@ -407,9 +391,9 @@ public class ClientGameApp extends GameApplication {
                     break;
                 }
 
-                case "Si puedes transformarte": {
-                    player.transformarSuperSonic();
-                }
+                case "Desbloquear Transformacion":
+                    getWorldProperties().setValue("transformacion", true);
+                    break;
             }
         });
     }
@@ -472,7 +456,7 @@ public class ClientGameApp extends GameApplication {
             protected void onActionBegin() {
                 if (player == null) return;
                 if (flag_Interactuar) { // Solo interactuar si se ha activado la bandera
-                    // Enviar mensaje al servidor para interactuar con el entorno
+                    // enviar mensaje al servidor para interactuar con el entorno
                     MultiplayerLogic.interactuar(clientID, player, conexion);
                 }
             }
@@ -481,8 +465,11 @@ public class ClientGameApp extends GameApplication {
         getInput().addAction(new UserAction("Transformar") {
             @Override
             protected void onActionBegin() {
+                // POV: ojala tuviera las promesas de typescript
                 if (player == null) return;
-                MultiplayerLogic.enviarMensaje("Puedo transformarme", conexion);
+                if (getWorldProperties().getBoolean("transformacion")) {
+                    player.transformarSuperSonic();
+                }
             }
         }, KeyCode.P);
 
@@ -497,7 +484,6 @@ public class ClientGameApp extends GameApplication {
     @Override
     protected void initUI() {
         //fixme: no funciona la fuente personalizada
-
     }
 
     /**
@@ -597,10 +583,16 @@ public class ClientGameApp extends GameApplication {
         });
     }
 
+    /**
+     * Inicializa las variables del juego.
+     * Estas variables estan disponibles cuando se inicia el juego
+     */
     @Override
     protected void initGameVars(Map<String, Object> vars) {
         // this creates an observable integer variable with value 3
-        vars.put("lives", 3);
+        //vars.put("lives", 3);
+        vars.put("transformacion", false);
+        vars.put("personaje", "");
     }
 
     /**

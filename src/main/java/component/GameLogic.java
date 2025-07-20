@@ -24,13 +24,7 @@ import static com.almasb.fxgl.dsl.FXGL.getGameTimer;
 
 public class GameLogic extends Component implements Serializable {
 
-    private Text textoCaucho;
-    private Text textoAnillos;
     private Text textoBasuraGlobal = crearTextoGlobal();
-    private Text textoVidas;
-    private Text textoBasura;
-    private Text textoPapel;
-
     private static String caucho = "Cauchos: 0";
     private static String anillos = "Anillos: 0";
     private static String vidas = "Vidas: 3";
@@ -143,11 +137,6 @@ public class GameLogic extends Component implements Serializable {
     public static void setVidas(String mensaje) {
         vidas = mensaje;
         actualizarUI();
-    }
-
-    public static void fxglAgregarTexto(String mensaje) {
-        FXGL.getGameScene().clearUINodes();
-        addText(mensaje, 140, 20);
     }
 
     /**
