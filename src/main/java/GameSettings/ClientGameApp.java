@@ -81,7 +81,7 @@ public class ClientGameApp extends GameApplication {
         getGameScene().setBackgroundColor(Color.DARKBLUE);
         Music music = getAssetLoader().loadMusic("OST.mp3");
         // Fixme: cambiar la musica, ya no me gusta esta
-        //getAudioPlayer().loopMusic(music);
+        getAudioPlayer().loopMusic(music);
     }
 
     // Todo: puedo pasar esta pantalla a su respectiva clase
