@@ -11,18 +11,16 @@ import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.app.GameApplication;
 import static com.almasb.fxgl.dsl.FXGL.*;
 
-import java.net.ConnectException;
 import java.util.*;
 
 import com.almasb.fxgl.ui.FXGLButton;
-import component.GameLogic;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.net.Connection;
 import com.almasb.fxgl.physics.PhysicsComponent;
-import component.MultiplayerLogic;
+import com.almasb.fxgl.ui.FXGLDialogFactoryServiceProvider;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -71,7 +69,8 @@ public class ClientGameApp extends GameApplication {
                 "Jose Luis      - Tester",
                 "DemoLinkle   - Tester",
                 "Jose Luis      - Productor",
-                "Jose Luis      - Director"
+                "Jose Luis      - Director",
+                "Rex              - Apoyo moral"
         ));
     }
 
@@ -92,9 +91,11 @@ public class ClientGameApp extends GameApplication {
             Stage stage = new Stage();
             VBox root = new VBox(15);
             root.setAlignment(Pos.CENTER);
-            Text title = new Text("Selecciona tu personaje");
+            Text titulo = FXGL.getUIFactoryService().newText("Selecciona tu personaje");
+            titulo.setFill(Color.BLACK);
 
             FXGLButton btnSonic = (FXGLButton) FXGL.getUIFactoryService().newButton("Sonic");
+            btnSonic.setTextFill(Color.BLUE);
             btnSonic.setOnAction(e -> {
                 getWorldProperties().setValue("personaje", "sonic");
                 stage.close();
@@ -102,6 +103,7 @@ public class ClientGameApp extends GameApplication {
             });
 
             FXGLButton btnTails = (FXGLButton) FXGL.getUIFactoryService().newButton("Tails");
+            btnTails.setTextFill(Color.YELLOW);
             btnTails.setOnAction(e -> {
                 getWorldProperties().setValue("personaje", "tails");
                 stage.close();
@@ -109,14 +111,16 @@ public class ClientGameApp extends GameApplication {
             });
 
             FXGLButton btnKnuckles = (FXGLButton) FXGL.getUIFactoryService().newButton("Knuckles");
+            btnKnuckles.setTextFill(Color.RED);
             btnKnuckles.setOnAction(e -> {
                 getWorldProperties().setValue("personaje", "knuckles");
                 stage.close();
                 Jugar();
             });
 
-            root.getChildren().addAll(title, btnSonic, btnTails, btnKnuckles);
-            Scene scene = new Scene(root, 300, 200);
+            root.getChildren().addAll(titulo, btnSonic, btnTails, btnKnuckles);
+            root.setBackground(Background.fill(Color.LIGHTGRAY));
+            Scene scene = new Scene(root, 400, 200);
             stage.setScene(scene);
             stage.setTitle("Selecciona personaje");
             stage.show();
@@ -528,11 +532,6 @@ public class ClientGameApp extends GameApplication {
                 GameLogic.filtroColor(0);
             }
         }, KeyCode.L);
-    }
-
-    @Override
-    protected void initUI() {
-        //fixme: no funciona la fuente personalizada
     }
 
     /**

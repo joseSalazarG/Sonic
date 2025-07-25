@@ -14,7 +14,6 @@ import javafx.scene.image.ImageView;
 public class EggmanComponent extends Component {
 
     private PhysicsComponent physics;
-
     private double velocidad = 50;
     private double startX;
     private double distancia = 300;

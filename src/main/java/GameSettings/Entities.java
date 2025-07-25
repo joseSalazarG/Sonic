@@ -4,6 +4,8 @@ import java.util.List;
 
 public class Entities {
 
+    //Todo: puedes hacer la generacion de las entidades en el tiempo
+
     static List<int[]> posicionesRings = List.of(
         new int[]{648, 425},
         new int[]{664, 425},
@@ -11,7 +13,6 @@ public class Entities {
         new int[]{695, 425},
         new int[]{455, 606},
         new int[]{487, 606}
-        // mas anillos 
     );
 
     static List<int[]> posicionesBasura = List.of(
@@ -27,7 +28,10 @@ public class Entities {
             new int[]{1350, 320},
             new int[]{1360, 320},
             new int[]{1370, 320},
-            new int[]{1380, 320}
+            new int[]{1380, 320},
+            new int[] {2035, 560},
+            new int[] {2045, 560},
+            new int[] {2050, 560}
     );
 
     static List<int[]> posicionesRobots = List.of(
@@ -40,7 +44,6 @@ public class Entities {
         new int[]{1248, 380},
         new int[]{1348, 410},
         new int[]{1448, 440}
-        // mas robots
     );
 
 }

@@ -1,7 +1,5 @@
-package component;
+package GameSettings;
 
-import GameSettings.Player;
-import com.almasb.fxgl.core.collection.PropertyMap;
 import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.net.Connection;
 

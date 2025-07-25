@@ -1,11 +1,7 @@
-package component;
+package GameSettings;
 
-import GameSettings.Player;
-import com.almasb.fxgl.core.serialization.Bundle;
 import com.almasb.fxgl.dsl.FXGL;
-import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.component.Component;
-import com.almasb.fxgl.net.Connection;
 import com.almasb.fxgl.time.TimerAction;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -15,13 +11,16 @@ import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 import static com.almasb.fxgl.dsl.FXGL.getGameTimer;
 
+/**
+ * Maneja la logica del juego, la actualización de la UI,
+ * el manejo de eventos y la interacción con los componentes del juego.
+ */
 public class GameLogic extends Component implements Serializable {
 
     private Text textoBasuraGlobal = crearTextoGlobal();
@@ -31,10 +30,9 @@ public class GameLogic extends Component implements Serializable {
     private static String basura = "Basura: 0";
     private static String papel = "Papel: 0";
 
-    public static void imprimir(String titulo) {
-        System.out.println(titulo);
-    }
-
+    /**
+     * Agrega un texto a la UI del juego.
+     */
     public static void actualizarUI() {
         getGameScene().clearUINodes();
         addText(anillos, 20, 20);
@@ -54,12 +52,13 @@ public class GameLogic extends Component implements Serializable {
         botonAyuda.setTranslateY(30);
 
         botonAyuda.setOnMouseClicked(e -> {
-            System.out.println("Ayuda");
             Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                    "Escribe aqui las reglas",
+                    "Lenguaje de Programación: Java\n" +
+                            "Libreria Externa: FXGL\n" +
+                            "Objetivo: Recoger basura y destruir robots.\n",
                     ButtonType.CLOSE);
-            alert.setTitle("Mensaje de Ayuda");
-            alert.setHeaderText("REGLAS");
+            alert.setTitle("Acerca de");
+            alert.setHeaderText("Acerca De");
             alert.showAndWait();
         });
 
