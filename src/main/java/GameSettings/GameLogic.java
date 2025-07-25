@@ -145,7 +145,6 @@ public class GameLogic extends Component implements Serializable {
      * @param player       El jugador al que se le activará la invencibilidad.
      */
     public static void activarInvencibilidad(int milisegundos, Player player) {
-        player.setInvencibilidad(true);
 
         TimerAction blinkAction = getGameTimer().runAtInterval(() -> {
             player.getViewComponent().setVisible(!player.getViewComponent().isVisible());

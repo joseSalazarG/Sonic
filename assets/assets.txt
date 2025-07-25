@@ -1,0 +1,13 @@
+Niveles/Nivel 1.tmx
+Niveles/Sega Genesis 32X - Sonic the Hedgehog - Green Hill Zone & Ending.png
+Niveles/Sega Genesis 32X - Sonic the Hedgehog - Green Hill Zone & Ending.tsx
+Niveles/koalio-single.png
+Niveles/level1.tmx
+Niveles/level2.tmx
+Niveles/level3.tmx
+Niveles/tileSet.png
+Niveles/tiles_spritesheet.png
+Personajes/knucles.png
+Personajes/koalio.png
+Personajes/playerSonic.png
+Personajes/tails.png

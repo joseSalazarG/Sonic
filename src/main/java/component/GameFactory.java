@@ -12,6 +12,7 @@ import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
 import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
+import component.Enemigos.EggmanComponent;
 import component.Personajes.KnucklesComponent;
 import component.Personajes.SonicComponent;
 import component.Personajes.TailsComponent;
@@ -138,6 +139,29 @@ public class GameFactory implements EntityFactory {
         return player;
     }
 
+    @Spawns("eggman")
+    public Player eggman(SpawnData data) {
+        PhysicsComponent fisicas = new PhysicsComponent();
+        fisicas.setBodyType(BodyType.KINEMATIC);
+
+        FixtureDef fixture = new FixtureDef();
+        fixture.setFriction(1.0f);
+        fixture.setRestitution(0.0f);
+        fisicas.setFixtureDef(fixture);
+
+        Player eggman = new Player();
+        eggman.setType(EntityType.EGGMAN);
+        eggman.getBoundingBoxComponent().addHitBox(new HitBox(new Point2D(10, 10), BoundingShape.circle(40)));
+        eggman.addComponent(fisicas);
+        eggman.addComponent(new CollidableComponent(true));
+        eggman.getProperties().setValue("altura", 100.0);
+        eggman.addComponent(new EggmanComponent());
+
+        eggman.getProperties().setValue("id", java.util.UUID.randomUUID().toString());
+
+        return eggman;
+    }
+
     @Spawns("plataforma")
     public Entity newPlatform(SpawnData data) {
         PhysicsComponent fisicas = new PhysicsComponent();
@@ -240,30 +264,6 @@ public class GameFactory implements EntityFactory {
         robot.getProperties().setValue("id", java.util.UUID.randomUUID().toString()); 
 
         return robot;
-    }
-
-    @Spawns("eggman")
-    public Entity eggman(SpawnData data) {
-        PhysicsComponent fisicas = new PhysicsComponent();
-        fisicas.setBodyType(BodyType.KINEMATIC);
-
-        FixtureDef fixture = new FixtureDef();
-        fixture.setFriction(1.0f);
-        fixture.setRestitution(0.0f);
-        fisicas.setFixtureDef(fixture);
-
-        Entity eggman = entityBuilder(data)
-                .type(EntityType.EGGMAN)
-                .bbox(new HitBox(new Point2D(10, 10), BoundingShape.circle(40)))
-                .with(fisicas)
-                .with(new CollidableComponent(true))
-                .with(new component.Enemigos.EggmanComponent())
-                .with("altura", 100.0)     
-                .build();
-                
-         eggman.getProperties().setValue("id", java.util.UUID.randomUUID().toString()); 
-
-        return eggman;
     }
 
     @Spawns("esmeralda")

@@ -243,7 +243,8 @@ public class ClientGameApp extends GameApplication {
                     double x = ((Number) bundle.get("x")).doubleValue();
                     double y = ((Number) bundle.get("y")).doubleValue();
                     String id = bundle.get("id");
-                    Entity eggman = spawn("eggman", x, y);
+                    Entity entidad = spawn("eggman", 1500, 10);
+                    Player eggman = (Player) entidad;
                     eggman.getProperties().setValue("id", id); // Guarda el id para identificarlo luego
                     break;
                 }
@@ -569,20 +570,10 @@ public class ClientGameApp extends GameApplication {
 
         onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.CAUCHO, (player, caucho) -> {
             if (player.hasComponent(KnucklesComponent.class)) {
+                recogerBasura((Player)player, caucho);
                 flag_Interactuar = true;
-                //stand_by = caucho; // Guarda la entidad caucho para interactuar
             }
         });
-
-        onCollisionEnd(GameFactory.EntityType.PLAYER, GameFactory.EntityType.CAUCHO, (player, caucho) -> {
-            flag_Interactuar = false;
-        });
-
-       onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.BASURA, (playerEntity, basura) -> {
-           if (playerEntity.hasComponent(SonicComponent.class) || playerEntity.hasComponent(TailsComponent.class) || playerEntity.hasComponent(KnucklesComponent.class)) {
-               recogerBasura((Player) playerEntity, basura);
-           }
-       });
 
        onCollisionBegin(GameFactory.EntityType.PLAYER, GameFactory.EntityType.ROBOT_ENEMIGO, (tu, robot) -> {
             // si eres invencible y no estas transformado no haces nada
@@ -621,11 +612,16 @@ public class ClientGameApp extends GameApplication {
             double topEggman = eggman.getY();
 
             boolean golpeDesdeArriba = bottomPlayer <= topEggman + 10;
-            if (golpeDesdeArriba) {
+
+            if (((Player) eggman).isInvencible() ){
+                // no hacer nada :v
+            } else if  (golpeDesdeArriba) {
                 String eggmanId = eggman.getProperties().getString("id");
                 MultiplayerLogic.atacarEggman(eggmanId, conexion);
+                GameLogic.activarInvencibilidad(3000, (Player) eggman);
                 player.getComponent(PhysicsComponent.class).setVelocityY(-300);
-            } else {
+            }
+            else {
                 perderVidas();
             }
         });

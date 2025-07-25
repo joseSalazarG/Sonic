@@ -28,11 +28,6 @@ public class Player extends Entity {
         super();
     }
 
-    public Player(Entity entidad, Connection<Bundle> conexion) {
-        super();
-        this.conexion = conexion;
-    }
-
     public void setInvencibilidad(boolean flag) {
         this.invencible = flag;
     }
@@ -111,13 +106,5 @@ public class Player extends Entity {
             setTransformado(false);
         }
         setInvencibilidad(!isInvencible());
-    }
-
-    public void setConexion(Connection<Bundle> conexion) {
-        this.conexion = conexion;
-    }
-
-    public Connection<Bundle> getConexion() {
-        return conexion;
     }
 }
